@@ -82,6 +82,36 @@ export default function Loading() {
         </div>
       </section>
 
+      {/* Product Details Skeleton */}
+      <section className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+          {/* Image Skeleton */}
+          <div className="grid gap-4">
+            <Skeleton className="h-[400px] w-full rounded-lg" />
+            <div className="grid grid-cols-4 gap-4">
+              <Skeleton className="h-24 w-full rounded-lg" />
+              <Skeleton className="h-24 w-full rounded-lg" />
+              <Skeleton className="h-24 w-full rounded-lg" />
+              <Skeleton className="h-24 w-full rounded-lg" />
+            </div>
+          </div>
+
+          {/* Details Skeleton */}
+          <div className="flex flex-col gap-6">
+            <Skeleton className="h-10 w-3/4" />
+            <Skeleton className="h-6 w-1/2" />
+            <Skeleton className="h-8 w-1/4" />
+            <Skeleton className="h-1 w-full" /> {/* Separator */}
+            <Skeleton className="h-24 w-full" /> {/* Description */}
+            <Skeleton className="h-12 w-full" /> {/* Add to Cart Button */}
+            <Skeleton className="h-1 w-full" /> {/* Separator */}
+            <Skeleton className="h-8 w-1/3" /> {/* Reviews Title */}
+            <Skeleton className="h-20 w-full" /> {/* Review 1 */}
+            <Skeleton className="h-20 w-full" /> {/* Review 2 */}
+          </div>
+        </div>
+      </section>
+
       {/* Footer Skeleton */}
       <div className="bg-red-800 py-10 px-4">
         <div className="container mx-auto grid grid-cols-1 md:grid-cols-5 gap-8 text-sm">

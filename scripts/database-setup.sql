@@ -1,161 +1,111 @@
+-- Enable Row Level Security
+ALTER TABLE auth.users ENABLE ROW LEVEL SECURITY;
+
 -- Create products table
 CREATE TABLE IF NOT EXISTS products (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  description TEXT,
-  price NUMERIC(10, 2) NOT NULL,
-  discount_price NUMERIC(10, 2),
-  images TEXT[] NOT NULL, -- Array of image URLs
-  category TEXT NOT NULL,
-  rating NUMERIC(2, 1) DEFAULT 0.0,
-  num_reviews INTEGER DEFAULT 0,
-  stock INTEGER NOT NULL DEFAULT 0,
-  sku TEXT UNIQUE NOT NULL,
-  brand TEXT,
-  material TEXT,
-  color TEXT,
-  size TEXT[], -- Array of available sizes
-  care_instructions TEXT,
-  is_featured BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Create profiles table (Supabase Auth handles basic user data, this is for extended profile)
-CREATE TABLE IF NOT EXISTS profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  name TEXT,
-  address TEXT,
-  phone TEXT,
-  is_admin BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Create orders table
-CREATE TABLE IF NOT EXISTS orders (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL, -- Link to auth.users
-  items JSONB NOT NULL, -- Store cart items as JSONB array
-  total_amount NUMERIC(10, 2) NOT NULL,
-  status TEXT DEFAULT 'pending', -- e.g., 'pending', 'processing', 'shipped', 'delivered', 'cancelled'
-  order_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  shipping_address TEXT NOT NULL,
-  payment_method TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Create reviews table
-CREATE TABLE IF NOT EXISTS reviews (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
-  comment TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE (product_id, user_id) -- Ensure one review per user per product
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    price DECIMAL(10,2) NOT NULL,
+    image_url TEXT,
+    category VARCHAR(100),
+    stock_quantity INTEGER DEFAULT 0,
+    is_featured BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Create categories table
 CREATE TABLE IF NOT EXISTS categories (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT UNIQUE NOT NULL,
-  slug TEXT UNIQUE NOT NULL,
-  image TEXT
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT,
+    image_url TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create collections table
-CREATE TABLE IF NOT EXISTS collections (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT UNIQUE NOT NULL,
-  slug TEXT UNIQUE NOT NULL,
-  image TEXT
+-- Create orders table
+CREATE TABLE IF NOT EXISTS orders (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    total_amount DECIMAL(10,2) NOT NULL,
+    status VARCHAR(50) DEFAULT 'pending',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create banners table
-CREATE TABLE IF NOT EXISTS banners (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  image_url TEXT NOT NULL,
-  title TEXT NOT NULL,
-  subtitle TEXT,
-  button_text TEXT,
-  link TEXT NOT NULL,
-  position TEXT NOT NULL -- 'hero' or 'promo'
+-- Create order_items table
+CREATE TABLE IF NOT EXISTS order_items (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
+    product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+    quantity INTEGER NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Enable Row Level Security (RLS) for tables
+-- Create cart_items table
+CREATE TABLE IF NOT EXISTS cart_items (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+    quantity INTEGER NOT NULL DEFAULT 1,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(user_id, product_id)
+);
+
+-- Enable RLS on all tables
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
-ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
-ALTER TABLE collections ENABLE ROW LEVEL SECURITY;
-ALTER TABLE banners ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE cart_items ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies for products (read-only for public, full for authenticated)
-CREATE POLICY "Allow public read access to products" ON products FOR SELECT USING (TRUE);
-CREATE POLICY "Allow authenticated insert on products" ON products FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-CREATE POLICY "Allow authenticated update on products" ON products FOR UPDATE USING (auth.uid() IS NOT NULL);
-CREATE POLICY "Allow authenticated delete on products" ON products FOR DELETE USING (auth.uid() IS NOT NULL);
+-- Create policies for products (public read access)
+CREATE POLICY "Products are viewable by everyone" ON products FOR SELECT USING (true);
 
--- RLS Policies for profiles
-CREATE POLICY "Allow individual read access to profiles" ON profiles FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "Allow individual insert on profiles" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
-CREATE POLICY "Allow individual update on profiles" ON profiles FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY "Allow individual delete on profiles" ON profiles FOR DELETE USING (auth.uid() = id);
+-- Create policies for categories (public read access)
+CREATE POLICY "Categories are viewable by everyone" ON categories FOR SELECT USING (true);
 
--- RLS Policies for orders
-CREATE POLICY "Allow individual read access to orders" ON orders FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Allow authenticated insert on orders" ON orders FOR INSERT WITH CHECK (auth.uid() = user_id);
--- Admin policy for orders (admins can update/delete any order)
-CREATE POLICY "Allow admin full access to orders" ON orders
-  FOR ALL USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = TRUE));
+-- Create policies for orders (users can only see their own orders)
+CREATE POLICY "Users can view their own orders" ON orders FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own orders" ON orders FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update their own orders" ON orders FOR UPDATE USING (auth.uid() = user_id);
 
--- RLS Policies for reviews
-CREATE POLICY "Allow public read access to reviews" ON reviews FOR SELECT USING (TRUE);
-CREATE POLICY "Allow authenticated insert on reviews" ON reviews FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Allow individual update on reviews" ON reviews FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Allow individual delete on reviews" ON reviews FOR DELETE USING (auth.uid() = user_id);
+-- Create policies for order_items (users can only see items from their orders)
+CREATE POLICY "Users can view their own order items" ON order_items FOR SELECT USING (
+    EXISTS (SELECT 1 FROM orders WHERE orders.id = order_items.order_id AND orders.user_id = auth.uid())
+);
+CREATE POLICY "Users can insert their own order items" ON order_items FOR INSERT WITH CHECK (
+    EXISTS (SELECT 1 FROM orders WHERE orders.id = order_items.order_id AND orders.user_id = auth.uid())
+);
 
--- RLS Policies for categories and collections
-CREATE POLICY "Allow public read access to categories" ON categories FOR SELECT USING (TRUE);
-CREATE POLICY "Allow public read access to collections" ON collections FOR SELECT USING (TRUE);
--- Admin policies for categories and collections
-CREATE POLICY "Allow admin full access to categories" ON categories
-  FOR ALL USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = TRUE));
-CREATE POLICY "Allow admin full access to collections" ON collections
-  FOR ALL USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = TRUE));
+-- Create policies for cart_items (users can only manage their own cart)
+CREATE POLICY "Users can view their own cart items" ON cart_items FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own cart items" ON cart_items FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update their own cart items" ON cart_items FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete their own cart items" ON cart_items FOR DELETE USING (auth.uid() = user_id);
 
--- RLS Policies for banners
-CREATE POLICY "Allow public read access to banners" ON banners FOR SELECT USING (TRUE);
--- Admin policy for banners
-CREATE POLICY "Allow admin full access to banners" ON banners
-  FOR ALL USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = TRUE));
+-- Create indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
+CREATE INDEX IF NOT EXISTS idx_products_featured ON products(is_featured);
+CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id);
 
--- Function to update updated_at timestamp
+-- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ language 'plpgsql';
 
--- Trigger for products table
-CREATE TRIGGER update_products_updated_at
-BEFORE UPDATE ON products
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at_column();
-
--- Trigger for profiles table
-CREATE TRIGGER update_profiles_updated_at
-BEFORE UPDATE ON profiles
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at_column();
-
--- Trigger for orders table
-CREATE TRIGGER update_orders_updated_at
-BEFORE UPDATE ON orders
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at_column();
+-- Create triggers for updated_at
+CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON products FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_categories_updated_at BEFORE UPDATE ON categories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_cart_items_updated_at BEFORE UPDATE ON cart_items FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

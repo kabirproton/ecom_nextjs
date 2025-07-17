@@ -1,109 +1,13 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit"
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit"
 import { supabase } from "@/lib/supabase"
-import type { User, AuthState } from "@/types"
+import type { User } from "@/types"
 
-// Async Thunks
-export const signupUser = createAsyncThunk(
-  "auth/signupUser",
-  async ({ email, password, name }: { email: string; password: string; name: string }, { rejectWithValue }) => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name: name,
-            is_admin: false, // Default to non-admin
-          },
-        },
-      })
-
-      if (error) {
-        return rejectWithValue(error.message)
-      }
-
-      if (data.user) {
-        const user: User = {
-          id: data.user.id,
-          email: data.user.email!,
-          name: data.user.user_metadata?.name,
-          isAdmin: data.user.user_metadata?.is_admin || false,
-        }
-        return user
-      }
-      return rejectWithValue("Signup failed: No user data returned.")
-    } catch (error: any) {
-      return rejectWithValue(error.message)
-    }
-  },
-)
-
-export const loginUser = createAsyncThunk(
-  "auth/loginUser",
-  async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (error) {
-        return rejectWithValue(error.message)
-      }
-
-      if (data.user) {
-        const user: User = {
-          id: data.user.id,
-          email: data.user.email!,
-          name: data.user.user_metadata?.name,
-          isAdmin: data.user.user_metadata?.is_admin || false,
-        }
-        return user
-      }
-      return rejectWithValue("Login failed: No user data returned.")
-    } catch (error: any) {
-      return rejectWithValue(error.message)
-    }
-  },
-)
-
-export const logoutUser = createAsyncThunk("auth/logoutUser", async (_, { rejectWithValue }) => {
-  try {
-    const { error } = await supabase.auth.signOut()
-    if (error) {
-      return rejectWithValue(error.message)
-    }
-    return true
-  } catch (error: any) {
-    return rejectWithValue(error.message)
-  }
-})
-
-export const checkUserSession = createAsyncThunk("auth/checkUserSession", async (_, { rejectWithValue }) => {
-  try {
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.getSession()
-
-    if (error) {
-      return rejectWithValue(error.message)
-    }
-
-    if (session?.user) {
-      const user: User = {
-        id: session.user.id,
-        email: session.user.email!,
-        name: session.user.user_metadata?.name,
-        isAdmin: session.user.user_metadata?.is_admin || false,
-      }
-      return user
-    }
-    return null // No active session
-  } catch (error: any) {
-    return rejectWithValue(error.message)
-  }
-})
+interface AuthState {
+  user: User | null
+  isAuthenticated: boolean
+  loading: boolean
+  error: string | null
+}
 
 const initialState: AuthState = {
   user: null,
@@ -112,80 +16,103 @@ const initialState: AuthState = {
   error: null,
 }
 
+export const loginUser = createAsyncThunk(
+  "auth/loginUser",
+  async ({ email, password }: { email: string; password: string }) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (error) throw error
+    return data.user
+  },
+)
+
+export const signupUser = createAsyncThunk(
+  "auth/signupUser",
+  async ({ email, password, fullName }: { email: string; password: string; fullName: string }) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+        },
+      },
+    })
+
+    if (error) throw error
+    return data.user
+  },
+)
+
+export const logoutUser = createAsyncThunk("auth/logoutUser", async () => {
+  const { error } = await supabase.auth.signOut()
+  if (error) throw error
+})
+
+export const checkUserSession = createAsyncThunk("auth/checkUserSession", async () => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  return session?.user || null
+})
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    clearAuthError: (state) => {
+    clearError: (state) => {
       state.error = null
     },
   },
   extraReducers: (builder) => {
     builder
-      // Signup
-      .addCase(signupUser.pending, (state) => {
-        state.loading = true
-        state.error = null
-      })
-      .addCase(signupUser.fulfilled, (state, action: PayloadAction<User>) => {
-        state.loading = false
-        state.isAuthenticated = true
-        state.user = action.payload
-      })
-      .addCase(signupUser.rejected, (state, action) => {
-        state.loading = false
-        state.isAuthenticated = false
-        state.user = null
-        state.error = action.payload as string
-      })
-      // Login
       .addCase(loginUser.pending, (state) => {
         state.loading = true
         state.error = null
       })
-      .addCase(loginUser.fulfilled, (state, action: PayloadAction<User>) => {
+      .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false
+        state.user = action.payload as User
         state.isAuthenticated = true
-        state.user = action.payload
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false
-        state.isAuthenticated = false
-        state.user = null
-        state.error = action.payload as string
+        state.error = action.error.message || "Login failed"
       })
-      // Logout
-      .addCase(logoutUser.pending, (state) => {
+      .addCase(signupUser.pending, (state) => {
         state.loading = true
         state.error = null
+      })
+      .addCase(signupUser.fulfilled, (state, action) => {
+        state.loading = false
+        state.user = action.payload as User
+        state.isAuthenticated = true
+      })
+      .addCase(signupUser.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.error.message || "Signup failed"
       })
       .addCase(logoutUser.fulfilled, (state) => {
-        state.loading = false
-        state.isAuthenticated = false
         state.user = null
-      })
-      .addCase(logoutUser.rejected, (state, action) => {
+        state.isAuthenticated = false
         state.loading = false
-        state.error = action.payload as string
-      })
-      // Check Session
-      .addCase(checkUserSession.pending, (state) => {
-        state.loading = true
         state.error = null
       })
-      .addCase(checkUserSession.fulfilled, (state, action: PayloadAction<User | null>) => {
+      .addCase(checkUserSession.fulfilled, (state, action) => {
+        if (action.payload) {
+          state.user = action.payload as User
+          state.isAuthenticated = true
+        } else {
+          state.user = null
+          state.isAuthenticated = false
+        }
         state.loading = false
-        state.user = action.payload
-        state.isAuthenticated = !!action.payload
-      })
-      .addCase(checkUserSession.rejected, (state, action) => {
-        state.loading = false
-        state.user = null
-        state.isAuthenticated = false
-        state.error = action.payload as string
       })
   },
 })
 
-export const { clearAuthError } = authSlice.actions
+export const { clearError } = authSlice.actions
 export default authSlice.reducer

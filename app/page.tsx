@@ -1,19 +1,17 @@
 "use client"
-
-import type React from "react"
 import { useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "@/store"
 import { fetchProductsSuccess, fetchProductsFailure } from "@/store/slices/productSlice"
-import HeroCarousel from "@/components/home/HeroCarousel"
-import FeaturedProducts from "@/components/home/FeaturedProducts"
-import PromoBanners from "@/components/home/PromoBanners"
-import CategorySection from "@/components/home/CategorySection"
-import Newsletter from "@/components/home/Newsletter"
+import { HeroCarousel } from "@/components/home/HeroCarousel"
+import { FeaturedProducts } from "@/components/home/FeaturedProducts"
+import { PromoBanners } from "@/components/home/PromoBanners"
+import { CategorySection } from "@/components/home/CategorySection"
+import { Newsletter } from "@/components/home/Newsletter"
 import type { Collection } from "@/types"
 import { supabase } from "@/lib/supabase"
 
-const HomePage: React.FC = () => {
+const HomePage = () => {
   const dispatch: AppDispatch = useDispatch()
   const { products, loading, error } = useSelector((state: RootState) => state.products)
 
@@ -78,9 +76,9 @@ const HomePage: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <HeroCarousel />
+      <CategorySection />
       <FeaturedProducts products={products} />
       <PromoBanners />
-      <CategorySection />
       <Newsletter />
     </div>
   )

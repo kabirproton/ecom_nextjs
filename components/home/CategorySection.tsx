@@ -1,40 +1,66 @@
-"use client"
-
 import Link from "next/link"
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import type { Collection } from "@/types"
+import { Card, CardContent } from "@/components/ui/card"
 
-interface CategorySectionProps {
-  collections: Collection[]
-}
+const categories = [
+  {
+    id: 1,
+    name: "New Arrivals",
+    image: "/images/category-new.png",
+    href: "/categories/new",
+  },
+  {
+    id: 2,
+    name: "Dresses",
+    image: "/images/category-dresses.png",
+    href: "/categories/dresses",
+  },
+  {
+    id: 3,
+    name: "Kurtas",
+    image: "/images/category-kurtas.png",
+    href: "/categories/kurtas",
+  },
+  {
+    id: 4,
+    name: "Accessories",
+    image: "/images/category-accessories.png",
+    href: "/categories/accessories",
+  },
+]
 
-export function CategorySection({ collections }: CategorySectionProps) {
+export function CategorySection() {
   return (
-    <section className="container mx-auto px-4 py-12 text-center">
-      <h2 className="text-3xl font-bold mb-8 uppercase">Explore Collection</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        {collections.map((collection) => (
-          <div key={collection.id} className="flex flex-col items-center group">
-            <div className="relative w-64 h-64 rounded-full overflow-hidden mb-4 border-2 border-gray-200 group-hover:border-red-800 transition-colors duration-300">
-              <Image
-                src={collection.image || "/placeholder.jpg"}
-                alt={collection.name}
-                fill
-                style={{ objectFit: "cover" }}
-                className="group-hover:scale-105 transition-transform duration-300"
-              />
-              <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <Link href={collection.slug ? `/collections/${collection.slug}` : "#"} passHref>
-                  <Button className="bg-white text-red-800 hover:bg-gray-100 px-6 py-3 font-semibold rounded-none">
-                    SHOP NOW
-                  </Button>
-                </Link>
-              </div>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-800 uppercase">{collection.name}</h3>
-          </div>
-        ))}
+    <section className="py-16 bg-gray-50 dark:bg-gray-900">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Shop by Category</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Explore our diverse collection of ethnic wear and contemporary fashion
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {categories.map((category) => (
+            <Link key={category.id} href={category.href}>
+              <Card className="group hover:shadow-lg transition-shadow duration-300">
+                <CardContent className="p-0">
+                  <div className="relative aspect-square overflow-hidden rounded-t-lg">
+                    <Image
+                      src={category.image || "/placeholder.svg"}
+                      alt={category.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <div className="p-4 text-center">
+                    <h3 className="font-semibold text-lg">{category.name}</h3>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   )

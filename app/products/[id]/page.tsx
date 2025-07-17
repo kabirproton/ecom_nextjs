@@ -1,40 +1,48 @@
+"use client"
+
+import * as React from "react"
+import { useParams } from "next/navigation"
+import { useSelector, useDispatch } from "react-redux"
+import type { RootState, AppDispatch } from "@/store"
+import { fetchProductById, clearSelectedProduct } from "@/store/slices/productSlice"
 import { ProductDetails } from "@/components/product/ProductDetails"
-import { supabase } from "@/lib/supabase"
-import type { Product, Review } from "@/types"
-import { notFound } from "next/navigation"
+import Loading from "@/app/loading"
+import NotFound from "@/app/not-found"
 
-interface ProductPageProps {
-  params: {
-    id: string
+export default function ProductDetailPage() {
+  const { id } = useParams<{ id: string }>()
+  const dispatch: AppDispatch = useDispatch()
+  const { selectedProduct, loading, error } = useSelector((state: RootState) => state.products)
+
+  React.useEffect(() => {
+    if (id) {
+      dispatch(fetchProductById(id))
+    }
+    return () => {
+      dispatch(clearSelectedProduct()) // Clear product on unmount
+    }
+  }, [id, dispatch])
+
+  if (loading) {
+    return <Loading />
   }
-}
 
-export default async function ProductPage({ params }: ProductPageProps) {
-  const { id } = params
-
-  // Fetch product details
-  const { data: product, error: productError } = await supabase.from("products").select("*").eq("id", id).single()
-
-  if (productError || !product) {
-    console.error("Error fetching product:", productError)
-    notFound() // Show 404 page if product not found
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <h1 className="text-2xl font-bold text-destructive">Error loading product:</h1>
+        <p className="text-muted-foreground">{error}</p>
+      </div>
+    )
   }
 
-  // Fetch reviews for the product
-  const { data: reviews, error: reviewsError } = await supabase
-    .from("reviews")
-    .select("*")
-    .eq("product_id", id)
-    .order("created_at", { ascending: false })
-
-  if (reviewsError) {
-    console.error("Error fetching reviews:", reviewsError)
-    // Continue without reviews if there's an error
+  if (!selectedProduct) {
+    return <NotFound />
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <ProductDetails product={product as Product} reviews={(reviews as Review[]) || []} />
+    <div className="container mx-auto px-4 py-8 md:px-6">
+      <ProductDetails product={selectedProduct} />
     </div>
   )
 }

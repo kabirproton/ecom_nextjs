@@ -1,66 +1,86 @@
 "use client"
 
+import React from "react"
+import useEmblaCarousel from "embla-carousel-react"
 import { Button } from "@/components/ui/button"
-
-import * as React from "react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import Image from "next/image"
-import { Card, CardContent } from "@/components/ui/card"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-import Autoplay from "embla-carousel-autoplay"
-import type { Banner } from "@/types"
-import Link from "next/link"
 
-interface HeroCarouselProps {
-  banners: Banner[]
-}
+const heroSlides = [
+  {
+    id: 1,
+    title: "New Collection",
+    subtitle: "Discover the latest trends in ethnic wear",
+    image: "/images/hero-1.png",
+    cta: "Shop Now",
+  },
+  {
+    id: 2,
+    title: "Summer Sale",
+    subtitle: "Up to 50% off on selected items",
+    image: "/images/hero-2.png",
+    cta: "Explore Deals",
+  },
+]
 
-export function HeroCarousel({ banners }: HeroCarouselProps) {
-  const plugin = React.useRef(Autoplay({ delay: 4000, stopOnInteraction: false, stopOnMouseEnter: true }))
+export function HeroCarousel() {
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true })
+
+  const scrollPrev = React.useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev()
+  }, [emblaApi])
+
+  const scrollNext = React.useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext()
+  }, [emblaApi])
 
   return (
-    <Carousel
-      plugins={[plugin.current]}
-      className="w-full relative"
-      onMouseEnter={plugin.current.stop}
-      onMouseLeave={plugin.current.reset}
-    >
-      <CarouselContent>
-        {banners.map((banner, index) => (
-          <CarouselItem key={index}>
-            <div className="p-0">
-              <Card className="rounded-none border-none">
-                <CardContent className="flex aspect-[16/9] md:aspect-[16/7] lg:aspect-[16/6] items-center justify-center p-0 relative overflow-hidden">
-                  <Image
-                    src={banner.image_url || "/placeholder.svg"}
-                    alt={banner.title}
-                    fill
-                    style={{ objectFit: "cover" }}
-                    className="z-0"
-                    priority={index === 0} // Prioritize loading the first image
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center text-center z-10">
-                    <div className="text-white p-4 md:p-8">
-                      <h2 className="text-2xl md:text-5xl font-bold mb-2 md:mb-4 uppercase">{banner.title}</h2>
-                      {banner.subtitle && (
-                        <p className="text-lg md:text-2xl mb-4 md:mb-6 font-medium">{banner.subtitle}</p>
-                      )}
-                      {banner.button_text && banner.link && (
-                        <Link href={banner.link}>
-                          <Button className="bg-white text-red-800 hover:bg-gray-100 px-6 py-3 md:px-8 md:py-4 text-base md:text-lg font-semibold rounded-none">
-                            {banner.button_text}
-                          </Button>
-                        </Link>
-                      )}
-                    </div>
+    <section className="relative">
+      <div className="overflow-hidden" ref={emblaRef}>
+        <div className="flex">
+          {heroSlides.map((slide) => (
+            <div key={slide.id} className="flex-[0_0_100%] min-w-0 relative">
+              <div className="relative h-[500px] md:h-[600px] bg-gradient-to-r from-purple-400 to-pink-400">
+                <Image
+                  src={slide.image || "/placeholder.svg"}
+                  alt={slide.title}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+                <div className="absolute inset-0 bg-black/20" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center text-white space-y-4 max-w-2xl px-4">
+                    <h1 className="text-4xl md:text-6xl font-bold">{slide.title}</h1>
+                    <p className="text-lg md:text-xl">{slide.subtitle}</p>
+                    <Button size="lg" className="mt-6">
+                      {slide.cta}
+                    </Button>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </div>
-          </CarouselItem>
-        ))}
-      </CarouselContent>
-      <CarouselPrevious className="absolute left-4 z-20 text-white bg-black/50 hover:bg-black/70" />
-      <CarouselNext className="absolute right-4 z-20 text-white bg-black/50 hover:bg-black/70" />
-    </Carousel>
+          ))}
+        </div>
+      </div>
+
+      <Button
+        variant="outline"
+        size="icon"
+        className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white"
+        onClick={scrollPrev}
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </Button>
+
+      <Button
+        variant="outline"
+        size="icon"
+        className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white"
+        onClick={scrollNext}
+      >
+        <ChevronRight className="h-4 w-4" />
+      </Button>
+    </section>
   )
 }

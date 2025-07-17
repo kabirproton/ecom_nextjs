@@ -10,21 +10,55 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "hebbkx1anhila5yf.public.blob.vercel-storage.com",
-        port: "",
-        pathname: "/git-blob/**",
+        hostname: "misc.s3.us-west-2.amazonaws.com",
       },
       {
         protocol: "https",
-        hostname: "blob.v0.dev",
-        port: "",
-        pathname: "/**",
+        hostname: "images.unsplash.com",
       },
       {
         protocol: "https",
-        hostname: "via.placeholder.com", // For placeholder images
-        port: "",
-        pathname: "/**",
+        hostname: "tailwindui.com",
+      },
+      {
+        protocol: "https",
+        hostname: "plus.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.sanity.io",
+      },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.shopify.com",
+      },
+      {
+        protocol: "https",
+        hostname: "m.media-amazon.com",
+      },
+      {
+        protocol: "https",
+        hostname: "example.com", // For placeholder.svg
+      },
+      {
+        protocol: "https",
+        hostname: "via.placeholder.com", // For placeholder.svg
+      },
+      {
+        protocol: "https",
+        hostname: "**.supabase.co", // Supabase storage
       },
     ],
     unoptimized: true,

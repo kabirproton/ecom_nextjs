@@ -1,42 +1,21 @@
-import { configureStore, type ThunkAction, type Action } from "@reduxjs/toolkit"
-import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist"
-import storage from "redux-persist/lib/storage" // defaults to localStorage for web
-import storageSession from "redux-persist/lib/storage/session" // defaults to sessionStorage for web
-import { combineReducers } from "redux"
+import { configureStore } from "@reduxjs/toolkit"
 import authReducer from "./slices/authSlice"
 import cartReducer from "./slices/cartSlice"
 import productReducer from "./slices/productSlice"
 
-const authPersistConfig = {
-  key: "auth",
-  storage: storageSession, // Persist auth state in sessionStorage
-  whitelist: ["isAuthenticated", "user"], // Only persist these parts of auth state
-}
-
-const cartPersistConfig = {
-  key: "cart",
-  storage, // Persist cart state in localStorage
-  whitelist: ["items", "totalQuantity", "totalAmount"], // Only persist these parts of cart state
-}
-
-const rootReducer = combineReducers({
-  auth: persistReducer(authPersistConfig, authReducer),
-  cart: persistReducer(cartPersistConfig, cartReducer),
-  products: productReducer, // Products state typically doesn't need persistence
-})
-
 export const store = configureStore({
-  reducer: rootReducer,
+  reducer: {
+    auth: authReducer,
+    cart: cartReducer,
+    products: productReducer,
+  },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+        ignoredActionsPaths: ["meta.arg", "payload.timestamp"],
       },
     }),
 })
 
-export const persistor = persistStore(store)
-
 export type RootState = ReturnType<typeof store.getState>
 export type AppDispatch = typeof store.dispatch
-export type AppThunk<ReturnType = void> = ThunkAction<ReturnType, RootState, unknown, Action<string>>

@@ -1,5 +1,17 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
-import type { CartItem, CartState } from "@/types"
+import type { Product } from "@/types"
+
+interface CartItem {
+  id: string
+  product: Product
+  quantity: number
+}
+
+interface CartState {
+  items: CartItem[]
+  totalQuantity: number
+  totalAmount: number
+}
 
 const initialState: CartState = {
   items: [],
@@ -11,47 +23,42 @@ const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
-    addToCart: (state, action: PayloadAction<CartItem>) => {
-      const newItem = action.payload
-      const existingItem = state.items.find(
-        (item) =>
-          item.id === newItem.id &&
-          item.selectedSize === newItem.selectedSize &&
-          item.selectedColor === newItem.selectedColor,
-      )
+    addToCart: (state, action: PayloadAction<{ product: Product; quantity?: number }>) => {
+      const { product, quantity = 1 } = action.payload
+      const existingItem = state.items.find((item) => item.product.id === product.id)
 
       if (existingItem) {
-        existingItem.quantity += newItem.quantity
+        existingItem.quantity += quantity
       } else {
-        state.items.push(newItem)
+        state.items.push({
+          id: product.id,
+          product,
+          quantity,
+        })
       }
-      state.totalQuantity += newItem.quantity
-      state.totalAmount += newItem.price * newItem.quantity
+
+      state.totalQuantity += quantity
+      state.totalAmount += product.price * quantity
     },
     removeFromCart: (state, action: PayloadAction<string>) => {
-      const idToRemove = action.payload
-      const itemToRemove = state.items.find((item) => item.id === idToRemove)
+      const productId = action.payload
+      const existingItem = state.items.find((item) => item.product.id === productId)
 
-      if (itemToRemove) {
-        state.totalQuantity -= itemToRemove.quantity
-        state.totalAmount -= itemToRemove.price * itemToRemove.quantity
-        state.items = state.items.filter((item) => item.id !== idToRemove)
+      if (existingItem) {
+        state.totalQuantity -= existingItem.quantity
+        state.totalAmount -= existingItem.product.price * existingItem.quantity
+        state.items = state.items.filter((item) => item.product.id !== productId)
       }
     },
-    updateCartItemQuantity: (
-      state,
-      action: PayloadAction<{ id: string; quantity: number; selectedSize?: string; selectedColor?: string }>,
-    ) => {
-      const { id, quantity, selectedSize, selectedColor } = action.payload
-      const itemToUpdate = state.items.find(
-        (item) => item.id === id && item.selectedSize === selectedSize && item.selectedColor === selectedColor,
-      )
+    updateQuantity: (state, action: PayloadAction<{ productId: string; quantity: number }>) => {
+      const { productId, quantity } = action.payload
+      const existingItem = state.items.find((item) => item.product.id === productId)
 
-      if (itemToUpdate) {
-        const oldQuantity = itemToUpdate.quantity
-        itemToUpdate.quantity = quantity
-        state.totalQuantity += quantity - oldQuantity
-        state.totalAmount += itemToUpdate.price * (quantity - oldQuantity)
+      if (existingItem && quantity > 0) {
+        const quantityDiff = quantity - existingItem.quantity
+        existingItem.quantity = quantity
+        state.totalQuantity += quantityDiff
+        state.totalAmount += existingItem.product.price * quantityDiff
       }
     },
     clearCart: (state) => {
@@ -62,5 +69,5 @@ const cartSlice = createSlice({
   },
 })
 
-export const { addToCart, removeFromCart, updateCartItemQuantity, clearCart } = cartSlice.actions
+export const { addToCart, removeFromCart, updateQuantity, clearCart } = cartSlice.actions
 export default cartSlice.reducer

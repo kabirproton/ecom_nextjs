@@ -1,156 +1,139 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import * as React from "react"
+import { useRouter } from "next/navigation"
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "@/store"
 import { loginUser, signupUser, clearAuthError } from "@/store/slices/authSlice"
-import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2 } from "lucide-react"
 
 export default function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [name, setName] = useState("") // For signup
-  const dispatch = useDispatch<AppDispatch>()
+  const [loginEmail, setLoginEmail] = React.useState("")
+  const [loginPassword, setLoginPassword] = React.useState("")
+  const [signupEmail, setSignupEmail] = React.useState("")
+  const [signupPassword, setSignupPassword] = React.useState("")
+  const [signupFullName, setSignupFullName] = React.useState("")
+
+  const dispatch: AppDispatch = useDispatch()
   const { loading, error, isAuthenticated } = useSelector((state: RootState) => state.auth)
   const router = useRouter()
   const { toast } = useToast()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    dispatch(clearAuthError()) // Clear previous errors
-
-    if (isLogin) {
-      const resultAction = await dispatch(loginUser({ email, password }))
-      if (loginUser.fulfilled.match(resultAction)) {
-        toast({
-          title: "Login Successful!",
-          description: "Welcome back!",
-        })
-        router.push("/") // Redirect to homepage on successful login
-      } else if (loginUser.rejected.match(resultAction)) {
-        toast({
-          title: "Login Failed",
-          description: resultAction.payload as string,
-          variant: "destructive",
-        })
-      }
-    } else {
-      const resultAction = await dispatch(signupUser({ email, password, name }))
-      if (signupUser.fulfilled.match(resultAction)) {
-        toast({
-          title: "Signup Successful!",
-          description: "Please check your email to confirm your account.",
-        })
-        setIsLogin(true) // Switch to login after successful signup
-      } else if (signupUser.rejected.match(resultAction)) {
-        toast({
-          title: "Signup Failed",
-          description: resultAction.payload as string,
-          variant: "destructive",
-        })
-      }
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/")
     }
+    if (error) {
+      toast({
+        title: "Authentication Error",
+        description: error,
+        variant: "destructive",
+      })
+      dispatch(clearAuthError()) // Clear error after showing toast
+    }
+  }, [isAuthenticated, error, router, toast, dispatch])
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    dispatch(loginUser({ email: loginEmail, password: loginPassword }))
   }
 
-  // Redirect if already authenticated
-  if (isAuthenticated && typeof window !== "undefined") {
-    router.push("/")
-    return null // Render nothing while redirecting
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault()
+    dispatch(signupUser({ email: signupEmail, password: signupPassword, fullName: signupFullName }))
   }
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-150px)] bg-gray-50 py-12 px-4">
+    <div className="flex min-h-[calc(100vh-160px)] items-center justify-center bg-background px-4 py-12">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold text-red-800">{isLogin ? "Login" : "Sign Up"}</CardTitle>
-          <CardDescription>
-            {isLogin ? "Enter your credentials to access your account" : "Create a new account"}
-          </CardDescription>
+          <CardTitle className="text-3xl font-bold">Welcome to BIBA</CardTitle>
+          <p className="text-muted-foreground">Sign in or create an account</p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {!isLogin && (
-              <div>
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  disabled={loading}
-                />
-              </div>
-            )}
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="********"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
-            <Button
-              type="submit"
-              className="w-full bg-red-800 hover:bg-red-700 text-white py-2 rounded-none"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isLogin ? "Logging In..." : "Signing Up..."}
-                </>
-              ) : isLogin ? (
-                "Login"
-              ) : (
-                "Sign Up"
-              )}
-            </Button>
-          </form>
-          <div className="mt-6 text-center text-sm">
-            {isLogin ? (
-              <p>
-                Don't have an account?{" "}
-                <Link href="#" onClick={() => setIsLogin(false)} className="text-red-800 hover:underline">
-                  Sign Up
-                </Link>
-              </p>
-            ) : (
-              <p>
-                Already have an account?{" "}
-                <Link href="#" onClick={() => setIsLogin(true)} className="text-red-800 hover:underline">
-                  Login
-                </Link>
-              </p>
-            )}
-          </div>
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            </TabsList>
+            <TabsContent value="login" className="mt-6">
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <Label htmlFor="login-email">Email</Label>
+                  <Input
+                    id="login-email"
+                    type="email"
+                    placeholder="m@example.com"
+                    required
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    disabled={loading}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="login-password">Password</Label>
+                  <Input
+                    id="login-password"
+                    type="password"
+                    required
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    disabled={loading}
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Logging in..." : "Login"}
+                </Button>
+              </form>
+            </TabsContent>
+            <TabsContent value="signup" className="mt-6">
+              <form onSubmit={handleSignup} className="space-y-4">
+                <div>
+                  <Label htmlFor="signup-full-name">Full Name</Label>
+                  <Input
+                    id="signup-full-name"
+                    type="text"
+                    placeholder="John Doe"
+                    required
+                    value={signupFullName}
+                    onChange={(e) => setSignupFullName(e.target.value)}
+                    disabled={loading}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="signup-email">Email</Label>
+                  <Input
+                    id="signup-email"
+                    type="email"
+                    placeholder="m@example.com"
+                    required
+                    value={signupEmail}
+                    onChange={(e) => setSignupEmail(e.target.value)}
+                    disabled={loading}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="signup-password">Password</Label>
+                  <Input
+                    id="signup-password"
+                    type="password"
+                    required
+                    value={signupPassword}
+                    onChange={(e) => setSignupPassword(e.target.value)}
+                    disabled={loading}
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Signing up..." : "Sign Up"}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>

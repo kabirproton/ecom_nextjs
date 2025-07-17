@@ -1,30 +1,113 @@
-# Next.js ecommerce site
+# BIBA E-commerce Site
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+This is a fully responsive e-commerce website built with Next.js, Redux Toolkit, Supabase, and shadcn/ui.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/nextjsfe/v0-next-js-ecommerce-site)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/AJ6poczgYXM)
+## Features
 
-## Overview
+- Product Listing Page
+- Product Detail Page
+- Shopping Cart
+- User Authentication (Login/Signup) with Supabase
+- Redux Toolkit for state management
+- Tailwind CSS for styling
+- Responsive Design
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+## Setup
 
-## Deployment
+1.  **Clone the repository:**
+    \`\`\`bash
+    git clone <repository-url>
+    cd ecom_nextjs
+    \`\`\`
 
-Your project is live at:
+2.  **Install dependencies:**
+    \`\`\`bash
+    npm install
+    \`\`\`
 
-**[https://vercel.com/nextjsfe/v0-next-js-ecommerce-site](https://vercel.com/nextjsfe/v0-next-js-ecommerce-site)**
+3.  **Set up Supabase:**
+    *   Create a new project on [Supabase](https://supabase.com/).
+    *   Go to "Project Settings" -> "API" to get your `Project URL` and `Anon Public Key`.
+    *   Go to "Project Settings" -> "API" -> "Service Role" to get your `Service Role Key`.
 
-## Build your app
+4.  **Configure Environment Variables:**
+    Create a `.env.local` file in the root of your project and add the following:
+    \`\`\`env
+    NEXT_PUBLIC_SUPABASE_URL=YOUR_SUPABASE_URL
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+    SUPABASE_SERVICE_ROLE_KEY=YOUR_SUPABASE_SERVICE_ROLE_KEY
+    \`\`\`
+    Replace the placeholders with your actual Supabase credentials.
 
-Continue building your app on:
+5.  **Run Database Setup and Seed Scripts:**
+    *   Navigate to the `scripts` folder.
+    *   Open your Supabase SQL Editor and run the `database-setup.sql` script. This will create the necessary tables and RLS policies.
+    *   Then, run the `seed-data.sql` script to populate your database with initial product and user data.
 
-**[https://v0.dev/chat/projects/AJ6poczgYXM](https://v0.dev/chat/projects/AJ6poczgYXM)**
+6.  **Run the development server:**
+    \`\`\`bash
+    npm run dev
+    \`\`\`
 
-## How It Works
+    Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+## Project Structure
+
+\`\`\`
+.
+├── app/
+│   ├── auth/
+│   │   └── login/
+│   │       └── page.tsx
+│   ├── cart/
+│   │   └── page.tsx
+│   ├── products/
+│   │   └── [id]/
+│   │       └── page.tsx
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── loading.tsx
+│   └── not-found.tsx
+├── components/
+│   ├── home/
+│   │   ├── CategorySection.tsx
+│   │   ├── FeaturedProducts.tsx
+│   │   ├── HeroCarousel.tsx
+│   │   ├── Newsletter.tsx
+│   │   └── PromoBanners.tsx
+│   ├── layout/
+│   │   ├── Footer.tsx
+│   │   └── Header.tsx
+│   ├── product/
+│   │   ├── ProductCard.tsx
+│   │   └── ProductDetails.tsx
+│   ├── providers/
+│   │   └── ReduxProvider.tsx
+│   ├── theme-provider.tsx
+│   └── ui/ (shadcn/ui components)
+├── hooks/
+│   ├── use-mobile.tsx
+│   └── use-toast.ts
+├── lib/
+│   ├── supabase.ts
+│   └── utils.ts
+├── public/
+│   ├── images/
+│   └── *.svg, *.png, *.jpg (placeholder images)
+├── scripts/
+│   ├── database-setup.sql
+│   └── seed-data.sql
+├── store/
+│   ├── slices/
+│   │   ├── authSlice.ts
+│   │   ├── cartSlice.ts
+│   │   └── productSlice.ts
+│   └── index.ts
+├── types/
+│   └── index.ts
+├── package.json
+├── postcss.config.mjs
+├── tailwind.config.js
+└── tsconfig.json
+\`\`\`
+\`\`\`

@@ -1,224 +1,190 @@
 "use client"
 
-import { useState } from "react"
+import * as React from "react"
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { StarIcon } from "lucide-react"
 import type { Product, Review } from "@/types"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import { Star, ShoppingCart } from "lucide-react"
 import { useDispatch } from "react-redux"
-import type { AppDispatch } from "@/store"
-import { addToCart } from "@/store/slices/cartSlice"
+import { addItemToCart } from "@/store/slices/cartSlice"
 import { useToast } from "@/hooks/use-toast"
+import { supabase } from "@/lib/supabase"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface ProductDetailsProps {
   product: Product
-  reviews: Review[]
 }
 
-export function ProductDetails({ product, reviews }: ProductDetailsProps) {
-  const [selectedImage, setSelectedImage] = useState(product.images[0])
-  const [selectedSize, setSelectedSize] = useState<string | undefined>(product.size?.[0])
-  const [selectedColor, setSelectedColor] = useState<string | undefined>(product.color)
-  const [quantity, setQuantity] = useState(1)
-
-  const dispatch = useDispatch<AppDispatch>()
+export function ProductDetails({ product }: ProductDetailsProps) {
+  const dispatch = useDispatch()
   const { toast } = useToast()
+  const [reviews, setReviews] = React.useState<Review[]>([])
+  const [reviewsLoading, setReviewsLoading] = React.useState(true)
+  const [reviewsError, setReviewsError] = React.useState<string | null>(null)
 
-  const handleAddToCart = () => {
-    if (!selectedSize && product.size && product.size.length > 0) {
-      toast({
-        title: "Please select a size",
-        description: "You need to choose a size before adding to cart.",
-        variant: "destructive",
-      })
-      return
+  React.useEffect(() => {
+    const fetchReviews = async () => {
+      setReviewsLoading(true)
+      setReviewsError(null)
+      try {
+        const { data, error } = await supabase.from("reviews").select("*").eq("product_id", product.id)
+
+        if (error) {
+          throw new Error(error.message)
+        }
+        setReviews(data as Review[])
+      } catch (err: any) {
+        setReviewsError(err.message)
+      } finally {
+        setReviewsLoading(false)
+      }
     }
 
-    dispatch(
-      addToCart({
-        ...product,
-        quantity,
-        selectedSize,
-        selectedColor,
-      }),
-    )
+    if (product?.id) {
+      fetchReviews()
+    }
+  }, [product?.id])
+
+  const handleAddToCart = () => {
+    dispatch(addItemToCart({ ...product, quantity: 1 }))
     toast({
-      title: "Added to Cart!",
-      description: `${quantity} x ${product.name} added to your cart.`,
+      title: "Added to cart!",
+      description: `${product.name} has been added to your cart.`,
     })
   }
 
   const averageRating =
-    reviews.length > 0 ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : 0
+    reviews.length > 0 ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1) : "N/A"
 
   return (
-    <div className="grid md:grid-cols-2 gap-8 lg:gap-12 p-4 md:p-8">
-      {/* Product Image Gallery */}
-      <div className="flex flex-col gap-4">
-        <div className="relative w-full aspect-[3/4] overflow-hidden rounded-lg border">
+    <div className="grid md:grid-cols-2 gap-8 lg:gap-12 py-8">
+      {/* Product Images */}
+      <div className="grid gap-4">
+        <div className="relative h-[400px] w-full overflow-hidden rounded-lg">
           <Image
-            src={selectedImage || "/placeholder.svg"}
+            src={product.image_url || "/placeholder.svg"}
             alt={product.name}
             fill
             style={{ objectFit: "cover" }}
-            className="transition-opacity duration-300"
+            priority
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 50vw"
           />
         </div>
-        <div className="grid grid-cols-4 gap-2">
-          {product.images.map((image, index) => (
-            <Button
-              key={index}
-              variant="outline"
-              className={`w-full h-24 p-0 overflow-hidden rounded-lg ${
-                selectedImage === image ? "border-2 border-red-800" : ""
-              }`}
-              onClick={() => setSelectedImage(image)}
-            >
-              <Image
-                src={image || "/placeholder.svg"}
-                alt={`${product.name} thumbnail ${index + 1}`}
-                width={96}
-                height={96}
-                className="object-cover w-full h-full"
-              />
-            </Button>
-          ))}
+        <div className="grid grid-cols-4 gap-4">
+          {/* Placeholder for additional images */}
+          <div className="relative h-24 w-full overflow-hidden rounded-lg cursor-pointer">
+            <Image
+              src="/images/product-detail-1.png"
+              alt="Product thumbnail 1"
+              fill
+              style={{ objectFit: "cover" }}
+              sizes="(max-width: 768px) 25vw, (max-width: 1200px) 12vw, 8vw"
+            />
+          </div>
+          <div className="relative h-24 w-full overflow-hidden rounded-lg cursor-pointer">
+            <Image
+              src="/images/product-detail-2.png"
+              alt="Product thumbnail 2"
+              fill
+              style={{ objectFit: "cover" }}
+              sizes="(max-width: 768px) 25vw, (max-width: 1200px) 12vw, 8vw"
+            />
+          </div>
+          <div className="relative h-24 w-full overflow-hidden rounded-lg cursor-pointer">
+            <Image
+              src="/images/product-detail-3.png"
+              alt="Product thumbnail 3"
+              fill
+              style={{ objectFit: "cover" }}
+              sizes="(max-width: 768px) 25vw, (max-width: 1200px) 12vw, 8vw"
+            />
+          </div>
+          <div className="relative h-24 w-full overflow-hidden rounded-lg cursor-pointer bg-muted flex items-center justify-center text-muted-foreground">
+            + More
+          </div>
         </div>
       </div>
 
       {/* Product Details */}
       <div className="flex flex-col gap-6">
-        <h1 className="text-3xl lg:text-4xl font-bold text-gray-900">{product.name}</h1>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center">
-            {[...Array(5)].map((_, i) => (
-              <StarIcon
-                key={i}
-                className={`w-5 h-5 ${
-                  i < Math.floor(averageRating) ? "fill-yellow-400 text-yellow-400" : "fill-gray-300 text-gray-300"
-                }`}
-              />
-            ))}
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">{product.name}</h1>
+          <p className="text-muted-foreground text-lg mt-2">{product.category}</p>
+          <div className="flex items-center gap-2 mt-2">
+            <div className="flex text-yellow-500">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`h-5 w-5 ${i < Math.floor(Number.parseFloat(averageRating)) ? "fill-yellow-500" : ""}`}
+                />
+              ))}
+            </div>
+            <span className="text-muted-foreground text-sm">({reviews.length} reviews)</span>
           </div>
-          <span className="text-gray-600 text-sm">({product.num_reviews} reviews)</span>
-        </div>
-        <div className="flex items-baseline gap-2">
-          <span className="text-3xl font-bold text-red-800">
-            ₹{product.discount_price?.toFixed(2) || product.price.toFixed(2)}
-          </span>
-          {product.discount_price && (
-            <span className="text-lg text-gray-500 line-through">₹{product.price.toFixed(2)}</span>
-          )}
-          {product.discount_price && product.price && (
-            <span className="text-base text-green-600 font-medium">
-              {Math.round(((product.price - product.discount_price) / product.price) * 100)}% OFF
-            </span>
-          )}
+          <p className="text-4xl font-bold text-primary mt-4">₹{product.price.toFixed(2)}</p>
         </div>
 
-        <p className="text-gray-700 leading-relaxed">{product.description}</p>
+        <Separator />
 
-        {/* Size Selection */}
-        {product.size && product.size.length > 0 && (
-          <div>
-            <label htmlFor="size" className="block text-sm font-medium text-gray-700 mb-2">
-              Size:
-            </label>
-            <Select value={selectedSize} onValueChange={setSelectedSize}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select a size" />
-              </SelectTrigger>
-              <SelectContent>
-                {product.size.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        <div>
+          <h3 className="text-xl font-semibold text-foreground mb-2">Description</h3>
+          <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+        </div>
 
-        {/* Quantity and Add to Cart */}
         <div className="flex items-center gap-4">
-          <div className="flex items-center border rounded-md">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              disabled={quantity <= 1}
-            >
-              -
-            </Button>
-            <span className="px-4 py-2 text-lg font-medium">{quantity}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setQuantity(quantity + 1)}
-              disabled={quantity >= product.stock}
-            >
-              +
-            </Button>
-          </div>
           <Button
+            size="lg"
+            className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
             onClick={handleAddToCart}
-            className="flex-1 bg-red-800 hover:bg-red-700 text-white py-3 text-lg font-semibold rounded-none"
+            disabled={product.stock === 0}
           >
-            Add to Cart
+            {product.stock === 0 ? (
+              "Out of Stock"
+            ) : (
+              <>
+                <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
+              </>
+            )}
           </Button>
         </div>
 
-        {/* Product Information Accordion */}
-        <Accordion type="single" collapsible className="w-full">
-          <AccordionItem value="item-1">
-            <AccordionTrigger className="text-lg font-semibold text-gray-800">Product Details</AccordionTrigger>
-            <AccordionContent className="text-gray-700">
-              <ul className="list-disc pl-5 space-y-1">
-                <li>SKU: {product.sku}</li>
-                {product.brand && <li>Brand: {product.brand}</li>}
-                {product.material && <li>Material: {product.material}</li>}
-                {product.color && <li>Color: {product.color}</li>}
-                {product.care_instructions && <li>Care Instructions: {product.care_instructions}</li>}
-                <li>Category: {product.category}</li>
-                <li>
-                  In Stock: {product.stock > 0 ? "Yes" : "No"} ({product.stock} available)
-                </li>
-              </ul>
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="item-2">
-            <AccordionTrigger className="text-lg font-semibold text-gray-800">
-              Customer Reviews ({reviews.length})
-            </AccordionTrigger>
-            <AccordionContent className="text-gray-700">
-              {reviews.length === 0 ? (
-                <p>No reviews yet. Be the first to review this product!</p>
-              ) : (
-                <div className="space-y-4">
-                  {reviews.map((review) => (
-                    <div key={review.id} className="border-b pb-4 last:border-b-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        {[...Array(5)].map((_, i) => (
-                          <StarIcon
-                            key={i}
-                            className={`w-4 h-4 ${
-                              i < review.rating ? "fill-yellow-400 text-yellow-400" : "fill-gray-300 text-gray-300"
-                            }`}
-                          />
-                        ))}
-                        <span className="text-sm font-medium">{review.user_name || "Anonymous"}</span>
-                      </div>
-                      <p className="text-sm text-gray-600">{review.comment}</p>
-                      <p className="text-xs text-gray-500 mt-1">{new Date(review.created_at).toLocaleDateString()}</p>
+        <Separator />
+
+        {/* Reviews Section */}
+        <div>
+          <h3 className="text-xl font-semibold text-foreground mb-4">Customer Reviews</h3>
+          {reviewsLoading && (
+            <div className="space-y-4">
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          )}
+          {reviewsError && <p className="text-destructive">Error loading reviews: {reviewsError}</p>}
+          {!reviewsLoading && !reviewsError && reviews.length === 0 && (
+            <p className="text-muted-foreground">No reviews yet. Be the first to review this product!</p>
+          )}
+          {!reviewsLoading && !reviewsError && reviews.length > 0 && (
+            <div className="space-y-6">
+              {reviews.map((review) => (
+                <div key={review.id} className="border-b pb-4 last:border-b-0 last:pb-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex text-yellow-500">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`h-4 w-4 ${i < review.rating ? "fill-yellow-500" : ""}`} />
+                      ))}
                     </div>
-                  ))}
+                    <span className="text-sm font-medium text-foreground">{review.rating}/5 Stars</span>
+                  </div>
+                  <p className="text-muted-foreground text-sm mb-1">
+                    Reviewed on {new Date(review.created_at).toLocaleDateString()}
+                  </p>
+                  <p className="text-foreground">{review.comment}</p>
                 </div>
-              )}
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
