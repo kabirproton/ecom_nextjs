@@ -1,10 +1,8 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 import type { User } from "@/types"
-import { encryptData } from "@/lib/encryption"
 
 interface AuthState {
   user: User | null
-  token: string | null
   isAuthenticated: boolean
   loading: boolean
   error: string | null
@@ -12,7 +10,6 @@ interface AuthState {
 
 const initialState: AuthState = {
   user: null,
-  token: null,
   isAuthenticated: false,
   loading: false,
   error: null,
@@ -26,34 +23,27 @@ const authSlice = createSlice({
       state.loading = true
       state.error = null
     },
-    loginSuccess: (state, action: PayloadAction<{ user: User; token: string }>) => {
+    loginSuccess: (state, action: PayloadAction<User>) => {
       state.loading = false
-      state.user = action.payload.user
-      state.token = encryptData(action.payload.token) // Encrypt token
       state.isAuthenticated = true
+      state.user = action.payload
+      state.error = null
     },
     loginFailure: (state, action: PayloadAction<string>) => {
       state.loading = false
-      state.error = action.payload
-      state.user = null
-      state.token = null
       state.isAuthenticated = false
+      state.user = null
+      state.error = action.payload
     },
     logout: (state) => {
       state.user = null
-      state.token = null // Clear token
       state.isAuthenticated = false
-      state.error = null
       state.loading = false
+      state.error = null
     },
-    // You might want a separate action to set user from session/cookie if already logged in
-    setUserFromSession: (state, action: PayloadAction<{ user: User; token: string }>) => {
-      state.user = action.payload.user
-      state.token = encryptData(action.payload.token)
-      state.isAuthenticated = true
-    },
+    // You can add more actions for sign-up, session management, etc.
   },
 })
 
-export const { loginStart, loginSuccess, loginFailure, logout, setUserFromSession } = authSlice.actions
+export const { loginStart, loginSuccess, loginFailure, logout } = authSlice.actions
 export default authSlice.reducer

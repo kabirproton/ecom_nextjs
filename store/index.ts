@@ -1,44 +1,61 @@
-import { configureStore, combineReducers } from "@reduxjs/toolkit"
+import { configureStore, type Middleware } from "@reduxjs/toolkit"
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist"
 import storage from "redux-persist/lib/storage" // defaults to localStorage for web
 import storageSession from "redux-persist/lib/storage/session" // defaults to sessionStorage for web
+import { createWrapper } from "next-redux-wrapper"
+import { combineReducers } from "redux"
+
 import authReducer from "./slices/authSlice"
 import cartReducer from "./slices/cartSlice"
 import productReducer from "./slices/productSlice"
 
-// Redux Persist configuration for localStorage (e.g., cart)
+// Redux-persist configuration for localStorage (e.g., cart)
 const cartPersistConfig = {
   key: "cart",
   storage: storage,
-  whitelist: ["items"], // Only persist the 'items' array from cart slice
+  whitelist: ["items", "totalQuantity", "totalAmount"], // Only persist these parts of the cart state
 }
 
-// Redux Persist configuration for sessionStorage (e.g., temporary form data)
-const tempFormDataPersistConfig = {
-  key: "tempFormData",
+// Redux-persist configuration for sessionStorage (e.g., temporary form data)
+const authPersistConfig = {
+  key: "auth",
   storage: storageSession,
-  whitelist: [], // Add slices here if you have temporary form data
+  whitelist: ["user", "isAuthenticated"], // Only persist these parts of the auth state
 }
 
 const rootReducer = combineReducers({
-  auth: authReducer,
+  auth: persistReducer(authPersistConfig, authReducer),
   cart: persistReducer(cartPersistConfig, cartReducer),
-  products: productReducer,
-  // Add other reducers here
+  products: productReducer, // Products might not need persistence if always fetched from API
 })
 
-export const store = configureStore({
-  reducer: rootReducer,
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: {
-        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
-      },
-    }),
-  devTools: process.env.NODE_ENV !== "production",
-})
+// Simple logging middleware
+const logger: Middleware = (store) => (next) => (action) => {
+  console.log("dispatching", action)
+  const result = next(action)
+  console.log("next state", store.getState())
+  return result
+}
 
-export const persistor = persistStore(store)
+export const makeStore = () => {
+  const store = configureStore({
+    reducer: rootReducer,
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware({
+        serializableCheck: {
+          ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+        },
+      }).concat(logger), // Add logger middleware
+    devTools: process.env.NODE_ENV !== "production",
+  })
 
-export type RootState = ReturnType<typeof store.getState>
-export type AppDispatch = typeof store.dispatch
+  // @ts-ignore
+  store.__persistor = persistStore(store)
+  return store
+}
+
+export type AppStore = ReturnType<typeof makeStore>
+export type RootState = ReturnType<AppStore["getState"]>
+export type AppDispatch = AppStore["dispatch"]
+
+export const wrapper = createWrapper<AppStore>(makeStore)

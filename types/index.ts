@@ -6,15 +6,22 @@ export interface Product {
   originalPrice?: number
   discount?: number
   imageUrl: string
+  images?: string[] // Added for product detail page
   category: string
   rating: number
   reviews: number
   isNewArrival?: boolean
   isOnlineExclusive?: boolean
+  sizes?: string[] // Added for product detail page
+  colors?: string[] // Added for product detail page
+  material?: string // Added for product detail page
+  careInstructions?: string // Added for product detail page
 }
 
 export interface CartItem extends Product {
   quantity: number
+  selectedSize?: string // Added for cart item
+  selectedColor?: string // Added for cart item
 }
 
 export interface User {
@@ -62,4 +69,14 @@ export interface Banner {
   buttonText: string
   link: string
   position: "hero" | "promo"
+}
+
+export interface Review {
+  id: string
+  productId: string
+  userId: string
+  userName: string
+  rating: number
+  comment: string
+  date: string
 }
