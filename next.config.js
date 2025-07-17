@@ -7,19 +7,21 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ["localhost", "blob.v0.dev"],
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "**",
+        hostname: "hebbkx1anhila5yf.public.blob.vercel-storage.com",
+        port: "",
+        pathname: "/git-blob/**",
+      },
+      {
+        protocol: "https",
+        hostname: "blob.v0.dev",
+        port: "",
+        pathname: "/**",
       },
     ],
     unoptimized: true,
-  },
-  experimental: {
-    serverActions: {
-      allowedOrigins: ["localhost:3000"],
-    },
   },
 }
 

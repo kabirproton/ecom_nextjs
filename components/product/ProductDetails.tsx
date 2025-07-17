@@ -1,19 +1,11 @@
 "use client"
-
-import { Input } from "@/components/ui/input"
-
-import { Label } from "@/components/ui/label"
-
 import type React from "react"
 import Image from "next/image"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
-import { Star, Minus, Plus, ShoppingBag } from "lucide-react"
-import type { Product, Review } from "@/types"
+import { Star, ShoppingCart, Heart, Share2, Truck, RefreshCw, ShieldCheck } from "lucide-react"
+import type { Product } from "@/types"
 import { useDispatch } from "react-redux"
 import type { AppDispatch } from "@/store"
 import { addToCart } from "@/store/slices/cartSlice"
@@ -21,251 +13,197 @@ import { useToast } from "@/components/ui/use-toast"
 
 interface ProductDetailsProps {
   product: Product
-  reviews: Review[]
 }
 
-const ProductDetails: React.FC<ProductDetailsProps> = ({ product, reviews }) => {
+const ProductDetails: React.FC<ProductDetailsProps> = ({ product }) => {
   const dispatch = useDispatch<AppDispatch>()
   const { toast } = useToast()
 
-  const [selectedSize, setSelectedSize] = useState<string | undefined>(product.sizes?.[0])
-  const [selectedColor, setSelectedColor] = useState<string | undefined>(product.colors?.[0])
-  const [quantity, setQuantity] = useState<number>(1)
-  const [mainImage, setMainImage] = useState<string>(product.images?.[0] || product.imageUrl)
+  const [selectedSize, setSelectedSize] = useState<string | null>(null)
+  const [quantity, setQuantity] = useState(1)
 
   const handleAddToCart = () => {
-    if (!selectedSize || !selectedColor) {
+    if (!selectedSize) {
       toast({
-        title: "Selection Required",
-        description: "Please select a size and color before adding to cart.",
+        title: "Please select a size",
+        description: "You need to choose a size before adding to cart.",
         variant: "destructive",
       })
       return
     }
-
-    dispatch(
-      addToCart({
-        ...product,
-        selectedSize,
-        selectedColor,
-        quantity, // Quantity is handled by the cart slice, but we pass it for initial add
-      }),
-    )
+    dispatch(addToCart({ ...product, quantity, size: selectedSize }))
     toast({
-      title: "Added to Cart",
-      description: `${quantity} x ${product.name} added to your cart.`,
-      variant: "default",
+      title: "Added to cart!",
+      description: `${quantity} x ${product.name} (Size: ${selectedSize}) has been added to your cart.`,
     })
   }
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star key={i} className={`h-5 w-5 ${i < rating ? "text-yellow-400" : "text-gray-300"} fill-current`} />
-    ))
+  const handleQuantityChange = (change: number) => {
+    setQuantity((prev) => Math.max(1, prev + change))
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12">
-      {/* Product Images */}
-      <div className="flex flex-col items-center">
-        <div className="relative w-full max-w-lg h-[400px] md:h-[550px] mb-4 rounded-lg overflow-hidden shadow-md">
-          <Image
-            src={mainImage || "/placeholder.svg"}
-            alt={product.name}
-            layout="fill"
-            objectFit="contain"
-            className="bg-white"
-          />
+    <div className="container mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+      {/* Product Image Carousel */}
+      <div className="w-full">
+        <Carousel className="w-full max-w-full mx-auto">
+          <CarouselContent>
+            {product.images.map((image, index) => (
+              <CarouselItem key={index}>
+                <div className="relative w-full h-[450px] md:h-[600px] overflow-hidden rounded-lg">
+                  <Image
+                    src={image || "/placeholder.svg"}
+                    alt={`${product.name} - Image ${index + 1}`}
+                    layout="fill"
+                    objectFit="contain"
+                    className="bg-gray-100"
+                  />
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/70 hover:bg-white rounded-full p-2 shadow-md" />
+          <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/70 hover:bg-white rounded-full p-2 shadow-md" />
+        </Carousel>
+        <div className="flex gap-2 mt-4 justify-center">
+          {product.images.map((image, index) => (
+            <div
+              key={index}
+              className="relative w-20 h-20 cursor-pointer border border-gray-200 hover:border-primary-500 transition-colors rounded-md overflow-hidden"
+            >
+              <Image
+                src={image || "/placeholder.svg"}
+                alt={`Thumbnail ${index + 1}`}
+                layout="fill"
+                objectFit="contain"
+                className="bg-gray-100"
+              />
+            </div>
+          ))}
         </div>
-        {product.images && product.images.length > 1 && (
-          <Carousel
-            opts={{
-              align: "start",
-            }}
-            className="w-full max-w-lg"
-          >
-            <CarouselContent className="-ml-2">
-              {product.images.map((image, index) => (
-                <CarouselItem key={index} className="basis-1/4 pl-2">
-                  <div
-                    className="relative w-24 h-24 cursor-pointer border-2 rounded-md overflow-hidden"
-                    onClick={() => setMainImage(image)}
-                  >
-                    <Image
-                      src={image || "/placeholder.svg"}
-                      alt={`${product.name} thumbnail ${index + 1}`}
-                      layout="fill"
-                      objectFit="cover"
-                    />
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="left-0" />
-            <CarouselNext className="right-0" />
-          </Carousel>
-        )}
       </div>
 
       {/* Product Details */}
-      <div className="lg:sticky lg:top-24 h-fit">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{product.name}</h1>
-        <div className="flex items-center mb-4">
-          <div className="flex">{renderStars(product.rating)}</div>
-          <span className="text-gray-600 ml-2">({product.reviews} reviews)</span>
+      <div className="flex flex-col gap-6">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900">{product.name}</h1>
+        <p className="text-lg text-gray-600">{product.description}</p>
+
+        {/* Price */}
+        <div className="flex items-baseline gap-3">
+          {product.discountPrice ? (
+            <>
+              <span className="text-3xl font-bold text-primary-800">₹{product.discountPrice.toLocaleString()}</span>
+              <span className="text-lg text-gray-500 line-through">₹{product.price.toLocaleString()}</span>
+              <span className="text-base text-red-500 font-semibold">
+                {((1 - product.discountPrice / product.price) * 100).toFixed(0)}% OFF
+              </span>
+            </>
+          ) : (
+            <span className="text-3xl font-bold text-gray-900">₹{product.price.toLocaleString()}</span>
+          )}
         </div>
 
-        <div className="flex items-baseline mb-6">
-          <span className="text-4xl font-bold text-gray-900">₹{product.price.toLocaleString()}</span>
-          {product.originalPrice && (
-            <span className="text-xl text-gray-500 line-through ml-3">₹{product.originalPrice.toLocaleString()}</span>
-          )}
-          {product.discount && product.discount > 0 && (
-            <span className="text-lg text-bibaRed-600 font-semibold ml-3">{product.discount}% OFF</span>
-          )}
+        {/* Rating */}
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="flex">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                className={`h-5 w-5 ${i < product.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`}
+              />
+            ))}
+          </div>
+          <span>({product.numReviews} Reviews)</span>
         </div>
-
-        <p className="text-gray-700 leading-relaxed mb-6">{product.description}</p>
-
-        <Separator className="my-6" />
 
         {/* Size Selection */}
-        {product.sizes && product.sizes.length > 0 && (
-          <div className="mb-6">
-            <Label htmlFor="size-select" className="text-lg font-semibold mb-2 block">
-              Select Size:
-            </Label>
-            <Select onValueChange={setSelectedSize} defaultValue={selectedSize}>
-              <SelectTrigger id="size-select" className="w-full md:w-[200px]">
-                <SelectValue placeholder="Select a size" />
-              </SelectTrigger>
-              <SelectContent>
-                {product.sizes.map((size) => (
-                  <SelectItem key={size} value={size}>
-                    {size}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <div>
+          <h3 className="text-lg font-semibold mb-2">Select Size:</h3>
+          <div className="flex flex-wrap gap-2">
+            {product.size.map((size) => (
+              <Button
+                key={size}
+                variant={selectedSize === size ? "default" : "outline"}
+                className={`min-w-[50px] ${selectedSize === size ? "bg-primary-800 text-white hover:bg-primary-700" : "border-gray-300 hover:bg-gray-100"}`}
+                onClick={() => setSelectedSize(size)}
+              >
+                {size}
+              </Button>
+            ))}
           </div>
-        )}
-
-        {/* Color Selection */}
-        {product.colors && product.colors.length > 0 && (
-          <div className="mb-6">
-            <Label htmlFor="color-select" className="text-lg font-semibold mb-2 block">
-              Select Color:
-            </Label>
-            <Select onValueChange={setSelectedColor} defaultValue={selectedColor}>
-              <SelectTrigger id="color-select" className="w-full md:w-[200px]">
-                <SelectValue placeholder="Select a color" />
-              </SelectTrigger>
-              <SelectContent>
-                {product.colors.map((color) => (
-                  <SelectItem key={color} value={color}>
-                    {color}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+        </div>
 
         {/* Quantity and Add to Cart */}
-        <div className="flex items-center space-x-4 mb-8">
-          <Label htmlFor="quantity-input" className="text-lg font-semibold">
-            Quantity:
-          </Label>
+        <div className="flex items-center gap-4">
           <div className="flex items-center border border-gray-300 rounded-md">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-              className="rounded-r-none"
-            >
-              <Minus size={18} />
+            <Button variant="ghost" size="icon" onClick={() => handleQuantityChange(-1)} disabled={quantity <= 1}>
+              -
             </Button>
-            <Input
-              id="quantity-input"
-              type="number"
-              value={quantity}
-              onChange={(e) => setQuantity(Number.parseInt(e.target.value) || 1)}
-              className="w-16 text-center border-x border-gray-300 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
-              min={1}
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setQuantity((prev) => prev + 1)}
-              className="rounded-l-none"
-            >
-              <Plus size={18} />
+            <span className="px-4 text-lg font-medium">{quantity}</span>
+            <Button variant="ghost" size="icon" onClick={() => handleQuantityChange(1)}>
+              +
             </Button>
           </div>
           <Button
-            className="flex-1 bg-bibaRed-600 hover:bg-bibaRed-700 text-white py-3 text-lg rounded-md shadow-md"
+            className="flex-1 bg-primary-800 hover:bg-primary-700 text-white py-3 text-lg font-semibold"
             onClick={handleAddToCart}
           >
-            <ShoppingBag className="mr-2 h-5 w-5" /> Add to Cart
+            <ShoppingCart className="h-5 w-5 mr-2" /> Add to Cart
+          </Button>
+          <Button variant="outline" size="icon" className="border-gray-300 hover:bg-gray-100 bg-transparent">
+            <Heart className="h-5 w-5" />
+            <span className="sr-only">Add to Wishlist</span>
           </Button>
         </div>
 
-        <Separator className="my-6" />
+        {/* Additional Info */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+          <div className="flex items-center gap-2">
+            <Truck className="h-5 w-5 text-primary-800" />
+            <span>Free Shipping on orders above ₹999</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <RefreshCw className="h-5 w-5 text-primary-800" />
+            <span>Easy Returns & Exchanges</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-primary-800" />
+            <span>Secure Payment Options</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Share2 className="h-5 w-5 text-primary-800" />
+            <span>Share this product</span>
+          </div>
+        </div>
 
         {/* Product Specifications */}
-        <Card className="mb-8 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-gray-800">Product Details</CardTitle>
-          </CardHeader>
-          <CardContent className="text-gray-700 space-y-2">
-            {product.material && (
-              <p>
-                <span className="font-semibold">Material:</span> {product.material}
-              </p>
-            )}
-            {product.careInstructions && (
-              <p>
-                <span className="font-semibold">Care Instructions:</span> {product.careInstructions}
-              </p>
-            )}
-            <p>
-              <span className="font-semibold">Category:</span> {product.category}
-            </p>
-            {product.isNewArrival && (
-              <p>
-                <span className="font-semibold">Status:</span> New Arrival
-              </p>
-            )}
-            {product.isOnlineExclusive && (
-              <p>
-                <span className="font-semibold">Availability:</span> Online Exclusive
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        <div className="border-t border-gray-200 pt-6 mt-6">
+          <h3 className="text-xl font-bold mb-4 text-gray-900">Product Details</h3>
+          <ul className="space-y-2 text-gray-700">
+            <li>
+              <span className="font-semibold">SKU:</span> {product.sku}
+            </li>
+            <li>
+              <span className="font-semibold">Brand:</span> {product.brand}
+            </li>
+            <li>
+              <span className="font-semibold">Material:</span> {product.material}
+            </li>
+            <li>
+              <span className="font-semibold">Color:</span> {product.color}
+            </li>
+            <li>
+              <span className="font-semibold">Care Instructions:</span> {product.careInstructions}
+            </li>
+          </ul>
+        </div>
 
-        {/* Customer Reviews */}
-        <Card className="shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-gray-800">Customer Reviews ({reviews.length})</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {reviews.length === 0 ? (
-              <p className="text-gray-600">No reviews yet. Be the first to review this product!</p>
-            ) : (
-              reviews.map((review) => (
-                <div key={review.id} className="border-b pb-4 last:border-b-0 last:pb-0">
-                  <div className="flex items-center mb-2">
-                    <span className="font-semibold mr-2">{review.userName}</span>
-                    <div className="flex">{renderStars(review.rating)}</div>
-                    <span className="text-sm text-gray-500 ml-auto">{new Date(review.date).toLocaleDateString()}</span>
-                  </div>
-                  <p className="text-gray-700">{review.comment}</p>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+        {/* Customer Reviews (Placeholder) */}
+        <div className="border-t border-gray-200 pt-6 mt-6">
+          <h3 className="text-xl font-bold mb-4 text-gray-900">Customer Reviews</h3>
+          <p className="text-gray-600">No reviews yet. Be the first to review this product!</p>
+          {/* Add review form/list here later */}
+        </div>
       </div>
     </div>
   )

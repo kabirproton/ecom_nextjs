@@ -6,7 +6,7 @@ import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
-import { wrapper } from "@/store" // Import the Redux wrapper
+import { ReduxProvider } from "@/components/providers/ReduxProvider" // Import the new ReduxProvider
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     generator: 'v0.dev'
 }
 
-function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
@@ -24,16 +24,17 @@ function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <Header />
-          <main className="flex-grow">{children}</main>
-          <Footer />
-          <Toaster />
-        </ThemeProvider>
+        <ReduxProvider>
+          {" "}
+          {/* Wrap with ReduxProvider */}
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+            <Header />
+            <main className="flex-grow">{children}</main>
+            <Footer />
+            <Toaster />
+          </ThemeProvider>
+        </ReduxProvider>
       </body>
     </html>
   )
 }
-
-// Wrap the RootLayout with the Redux wrapper
-export default wrapper.withRedux(RootLayout)

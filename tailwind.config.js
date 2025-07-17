@@ -27,10 +27,20 @@ module.exports = {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          // Custom BIBA colors
+          800: "hsl(var(--primary-800))",
+          700: "hsl(var(--primary-700))",
+          600: "hsl(var(--primary-600))",
+          500: "hsl(var(--primary-500))",
+          100: "hsl(var(--primary-100))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -40,10 +50,6 @@ module.exports = {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
         },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
@@ -51,31 +57,6 @@ module.exports = {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
-        },
-        // Custom BIBA Colors
-        bibaRed: {
-          50: "hsl(var(--biba-red-50))",
-          100: "hsl(var(--biba-red-100))",
-          200: "hsl(var(--biba-red-200))",
-          300: "hsl(var(--biba-red-300))",
-          400: "hsl(var(--biba-red-400))",
-          500: "hsl(var(--biba-red-500))",
-          600: "hsl(var(--biba-red-600))",
-          700: "hsl(var(--biba-red-700))",
-          800: "hsl(var(--biba-red-800))",
-          900: "hsl(var(--biba-red-900))",
-        },
-        bibaGold: {
-          50: "hsl(var(--biba-gold-50))",
-          100: "hsl(var(--biba-gold-100))",
-          200: "hsl(var(--biba-gold-200))",
-          300: "hsl(var(--biba-gold-300))",
-          400: "hsl(var(--biba-gold-400))",
-          500: "hsl(var(--biba-gold-500))",
-          600: "hsl(var(--biba-gold-600))",
-          700: "hsl(var(--biba-gold-700))",
-          800: "hsl(var(--biba-gold-800))",
-          900: "hsl(var(--biba-gold-900))",
         },
       },
       borderRadius: {

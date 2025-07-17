@@ -1,29 +1,13 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit"
-import type { Product } from "@/types"
-import { supabase } from "@/lib/supabase" // Assuming you have a supabase client setup
+import { supabase } from "@/lib/supabase"
+import type { Product, ProductState } from "@/types"
 
-interface ProductState {
-  products: Product[]
-  featuredProducts: Product[]
-  selectedProduct: Product | null
-  loading: boolean
-  error: string | null
-}
-
-const initialState: ProductState = {
-  products: [],
-  featuredProducts: [],
-  selectedProduct: null,
-  loading: false,
-  error: null,
-}
-
-// Async Thunk for fetching all products
+// Async Thunks
 export const fetchProducts = createAsyncThunk("products/fetchProducts", async (_, { rejectWithValue }) => {
   try {
     const { data, error } = await supabase.from("products").select("*")
     if (error) {
-      throw error
+      return rejectWithValue(error.message)
     }
     return data as Product[]
   } catch (error: any) {
@@ -31,14 +15,28 @@ export const fetchProducts = createAsyncThunk("products/fetchProducts", async (_
   }
 })
 
-// Async Thunk for fetching a single product by ID
+export const fetchFeaturedProducts = createAsyncThunk(
+  "products/fetchFeaturedProducts",
+  async (_, { rejectWithValue }) => {
+    try {
+      const { data, error } = await supabase.from("products").select("*").eq("isFeatured", true)
+      if (error) {
+        return rejectWithValue(error.message)
+      }
+      return data as Product[]
+    } catch (error: any) {
+      return rejectWithValue(error.message)
+    }
+  },
+)
+
 export const fetchProductById = createAsyncThunk(
   "products/fetchProductById",
   async (id: string, { rejectWithValue }) => {
     try {
       const { data, error } = await supabase.from("products").select("*").eq("id", id).single()
       if (error) {
-        throw error
+        return rejectWithValue(error.message)
       }
       return data as Product
     } catch (error: any) {
@@ -47,46 +45,60 @@ export const fetchProductById = createAsyncThunk(
   },
 )
 
+const initialState: ProductState = {
+  products: [],
+  featuredProducts: [],
+  loading: false,
+  error: null,
+  selectedProduct: null,
+}
+
 const productSlice = createSlice({
   name: "products",
   initialState,
   reducers: {
-    // For dummy data or initial state setup
-    fetchProductsSuccess: (state, action: PayloadAction<Product[]>) => {
-      state.loading = false
-      state.products = action.payload
-      state.featuredProducts = action.payload.filter((p) => p.isFeatured) // Example: filter featured
+    clearProductError: (state) => {
       state.error = null
     },
-    fetchProductsFailure: (state, action: PayloadAction<string>) => {
-      state.loading = false
-      state.error = action.payload
-    },
-    setSelectedProduct: (state, action: PayloadAction<Product | null>) => {
-      state.selectedProduct = action.payload
+    clearSelectedProduct: (state) => {
+      state.selectedProduct = null
     },
   },
   extraReducers: (builder) => {
     builder
+      // Fetch Products
       .addCase(fetchProducts.pending, (state) => {
         state.loading = true
         state.error = null
       })
-      .addCase(fetchProducts.fulfilled, (state, action) => {
+      .addCase(fetchProducts.fulfilled, (state, action: PayloadAction<Product[]>) => {
         state.loading = false
         state.products = action.payload
-        state.featuredProducts = action.payload.filter((p) => p.isFeatured) // Assuming a 'isFeatured' flag
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
       })
+      // Fetch Featured Products
+      .addCase(fetchFeaturedProducts.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchFeaturedProducts.fulfilled, (state, action: PayloadAction<Product[]>) => {
+        state.loading = false
+        state.featuredProducts = action.payload
+      })
+      .addCase(fetchFeaturedProducts.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      // Fetch Product By Id
       .addCase(fetchProductById.pending, (state) => {
         state.loading = true
         state.error = null
         state.selectedProduct = null
       })
-      .addCase(fetchProductById.fulfilled, (state, action) => {
+      .addCase(fetchProductById.fulfilled, (state, action: PayloadAction<Product>) => {
         state.loading = false
         state.selectedProduct = action.payload
       })
@@ -98,5 +110,5 @@ const productSlice = createSlice({
   },
 })
 
-export const { fetchProductsSuccess, fetchProductsFailure, setSelectedProduct } = productSlice.actions
+export const { clearProductError, clearSelectedProduct } = productSlice.actions
 export default productSlice.reducer

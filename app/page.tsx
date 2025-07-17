@@ -9,6 +9,7 @@ import HeroCarousel from "@/components/home/HeroCarousel"
 import FeaturedProducts from "@/components/home/FeaturedProducts"
 import PromoBanners from "@/components/home/PromoBanners"
 import CategorySection from "@/components/home/CategorySection"
+import Newsletter from "@/components/home/Newsletter"
 import type { Product } from "@/types"
 
 // Dummy Data (replace with Supabase fetching)
@@ -213,13 +214,12 @@ const HomePage: React.FC = () => {
   if (error) return <div className="text-center text-red-500 p-8">Error: {error}</div>
 
   return (
-    <div className="min-h-screen">
-      <HeroCarousel banners={dummyHeroBanners} />
-      <PromoBanners banners={dummyPromoBanners} />
-      <FeaturedProducts title="RECOMMENDED FOR YOU" products={products} />
-      <CategorySection title="EXPLORE COLLECTION" categories={dummyCategoryCollections} />
-      {/* Newsletter is already part of the footer, but can be added as a separate section if needed */}
-      {/* <Newsletter /> */}
+    <div className="flex flex-col min-h-screen">
+      <HeroCarousel />
+      <FeaturedProducts products={products} />
+      <PromoBanners />
+      <CategorySection />
+      <Newsletter />
     </div>
   )
 }

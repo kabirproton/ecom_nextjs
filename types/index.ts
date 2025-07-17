@@ -3,31 +3,33 @@ export interface Product {
   name: string
   description: string
   price: number
-  originalPrice?: number
-  discount?: number
-  imageUrl: string
-  images?: string[] // Added for product detail page
+  discountPrice?: number
+  images: string[]
   category: string
   rating: number
-  reviews: number
-  isNewArrival?: boolean
-  isOnlineExclusive?: boolean
-  sizes?: string[] // Added for product detail page
-  colors?: string[] // Added for product detail page
-  material?: string // Added for product detail page
-  careInstructions?: string // Added for product detail page
+  numReviews: number
+  stock: number
+  sku: string
+  brand: string
+  material: string
+  color: string
+  size: string[]
+  careInstructions: string
+  isFeatured: boolean
+  createdAt: string
+  updatedAt: string
 }
 
 export interface CartItem extends Product {
   quantity: number
-  selectedSize?: string // Added for cart item
-  selectedColor?: string // Added for cart item
 }
 
 export interface User {
   id: string
   email: string
   name?: string
+  address?: string
+  phone?: string
   isAdmin: boolean
 }
 
@@ -38,45 +40,36 @@ export interface Order {
   totalAmount: number
   status: "pending" | "processing" | "shipped" | "delivered" | "cancelled"
   orderDate: string
-  shippingAddress: {
-    fullName: string
-    addressLine1: string
-    addressLine2?: string
-    city: string
-    state: string
-    zipCode: string
-    country: string
-  }
-}
-
-export interface Category {
-  name: string
-  slug: string
-  image?: string
-}
-
-export interface Collection {
-  name: string
-  slug: string
-  image?: string
-}
-
-export interface Banner {
-  id: string
-  imageUrl: string
-  title: string
-  subtitle: string
-  buttonText: string
-  link: string
-  position: "hero" | "promo"
+  shippingAddress: string
+  paymentMethod: string
 }
 
 export interface Review {
   id: string
   productId: string
   userId: string
-  userName: string
   rating: number
   comment: string
-  date: string
+  createdAt: string
+}
+
+export interface AuthState {
+  user: User | null
+  isAuthenticated: boolean
+  loading: boolean
+  error: string | null
+}
+
+export interface CartState {
+  items: CartItem[]
+  totalQuantity: number
+  totalAmount: number
+}
+
+export interface ProductState {
+  products: Product[]
+  featuredProducts: Product[]
+  loading: boolean
+  error: string | null
+  selectedProduct: Product | null
 }

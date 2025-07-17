@@ -1,65 +1,81 @@
 "use client"
 
-import type React from "react"
-import Image from "next/image"
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import Autoplay from "embla-carousel-autoplay"
-import type { Banner } from "@/types"
 
-interface HeroCarouselProps {
-  banners: Banner[]
-}
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
 
-const HeroCarousel: React.FC<HeroCarouselProps> = ({ banners }) => {
+export default function HeroCarousel() {
+  const slides = [
+    {
+      id: 1,
+      image: "/images/hero-1.png",
+      alt: "End of Season Sale",
+      title: "END OF SEASON SALE",
+      subtitle: "FIRST TIME ON DISCOUNT",
+      discount: "UPTO 50% OFF",
+      buttonText: "SHOP NOW",
+      buttonLink: "/sale",
+      position: "right", // Content on the right side
+    },
+    {
+      id: 2,
+      image: "/images/hero-2.png",
+      alt: "New Collection",
+      title: "NEW COLLECTION",
+      subtitle: "FRESH ARRIVALS",
+      discount: "EXPLORE NOW",
+      buttonText: "VIEW COLLECTION",
+      buttonLink: "/new",
+      position: "left", // Content on the left side
+    },
+  ]
+
   return (
     <section className="relative w-full overflow-hidden">
-      <Carousel
-        opts={{
-          align: "start",
-          loop: true,
-        }}
-        plugins={[
-          Autoplay({
-            delay: 5000,
-            stopOnInteraction: false,
-            stopOnMouseEnter: true,
-          }),
-        ]}
-      >
+      <Carousel className="w-full">
         <CarouselContent>
-          {banners.map((banner) => (
-            <CarouselItem key={banner.id}>
-              <div className="relative w-full h-[300px] md:h-[500px] lg:h-[600px]">
+          {slides.map((slide) => (
+            <CarouselItem key={slide.id}>
+              <div className="relative w-full h-[400px] md:h-[600px] lg:h-[700px]">
                 <Image
-                  src={banner.imageUrl || "/placeholder.svg"}
-                  alt={banner.title}
+                  src={slide.image || "/placeholder.svg"}
+                  alt={slide.alt}
                   layout="fill"
                   objectFit="cover"
-                  priority
+                  priority={true}
                   className="z-0"
                 />
-                <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center text-white z-10">
-                  <div className="text-center p-4">
-                    <h1 className="text-3xl md:text-5xl font-extrabold mb-2 md:mb-4 drop-shadow-lg">{banner.title}</h1>
-                    <p className="text-lg md:text-2xl mb-6 md:mb-8 drop-shadow-md">{banner.subtitle}</p>
-                    <Link href={banner.link}>
-                      <Button className="bg-bibaRed-600 hover:bg-bibaRed-700 text-white px-8 py-3 text-lg rounded-md shadow-lg">
-                        {banner.buttonText}
-                      </Button>
-                    </Link>
+                <div
+                  className={`absolute inset-0 flex items-center p-8 md:p-16 lg:p-24 ${
+                    slide.position === "right" ? "justify-end" : "justify-start"
+                  } z-10`}
+                >
+                  <div
+                    className={`bg-primary-800/80 text-white p-6 md:p-10 lg:p-12 max-w-xs md:max-w-md text-center ${
+                      slide.position === "right" ? "mr-0 md:mr-16 lg:mr-24" : "ml-0 md:ml-16 lg:ml-24"
+                    }`}
+                  >
+                    <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-2 md:mb-4 leading-tight">
+                      {slide.title}
+                    </h2>
+                    <p className="text-lg md:text-xl lg:text-2xl font-semibold text-yellow-300 mb-2 md:mb-3">
+                      {slide.subtitle}
+                    </p>
+                    <p className="text-3xl md:text-5xl lg:text-6xl font-extrabold mb-4 md:mb-6">{slide.discount}</p>
+                    <Button className="bg-white text-primary-800 hover:bg-gray-100 px-6 py-3 md:px-8 md:py-4 text-base md:text-lg font-semibold">
+                      <Link href={slide.buttonLink}>{slide.buttonText}</Link>
+                    </Button>
                   </div>
                 </div>
               </div>
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/50 hover:bg-white" />
-        <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/50 hover:bg-white" />
+        <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/70 hover:bg-white rounded-full p-2 shadow-md" />
+        <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/70 hover:bg-white rounded-full p-2 shadow-md" />
       </Carousel>
     </section>
   )
 }
-
-export default HeroCarousel

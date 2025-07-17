@@ -1,145 +1,188 @@
 "use client"
 
-import type React from "react"
 import Link from "next/link"
-import Image from "next/image"
-import { Search, Heart, ShoppingBag, User, Menu, X } from "lucide-react"
+import { useState } from "react"
+import { Search, Heart, ShoppingCart, User, Menu, X, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import Image from "next/image"
 import { useSelector } from "react-redux"
 import type { RootState } from "@/store"
 
-const Header: React.FC = () => {
-  const cartTotalQuantity = useSelector((state: RootState) => state.cart.totalQuantity)
-  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated)
+export default function Header() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const cartQuantity = useSelector((state: RootState) => state.cart.totalQuantity)
 
   const navLinks = [
-    { name: "NEW", href: "/new-arrivals" },
-    { name: "SUIT SETS", href: "/category/suit-sets" },
-    { name: "KURTAS & TOPS", href: "/category/kurtas-tops" },
-    { name: "DRESSES", href: "/category/dresses" },
-    { name: "DRESS MATERIAL", href: "/category/dress-material" },
-    { name: "BOTTOMS", href: "/category/bottoms" },
-    { name: "JEWELLERY", href: "/category/jewellery" },
-    { name: "FRAGRANCES", href: "/category/fragrances" },
-    { name: "GIRLS", href: "/category/girls" },
+    { name: "NEW", href: "/new" },
+    { name: "SUIT SETS", href: "/suit-sets" },
+    { name: "KURTAS & TOPS", href: "/kurtas-tops" },
+    { name: "DRESSES", href: "/dresses" },
+    { name: "DRESS MATERIAL", href: "/dress-material" },
+    { name: "BOTTOMS", href: "/bottoms" },
+    { name: "JEWELLERY", href: "/jewellery" },
+    { name: "FRAGRANCES", href: "/fragrances" },
+    { name: "GIRLS", href: "/girls" },
     { name: "COLLECTIONS", href: "/collections" },
-    { name: "CO-ORD SETS", href: "/category/co-ord-sets" },
-    { name: "SALE", href: "/sale", className: "text-bibaRed-600 font-bold" },
+    { name: "CO-ORD SETS", href: "/co-ord-sets" },
+    { name: "SALE", href: "/sale", isSale: true },
+  ]
+
+  const categories = [
+    { name: "Shop All", href: "/shop-all" },
+    { name: "Straight Suit Sets", href: "/straight-suit-sets" },
+    { name: "Anarkali Suit Sets", href: "/anarkali-suit-sets" },
+    { name: "Flared Suit Sets", href: "/flared-suit-sets" },
+    { name: "A-line & Kalidar Suits", href: "/a-line-kalidar-suits" },
+    { name: "Asymmetric Suits", href: "/asymmetric-suits" },
+    { name: "Fusion Suit Sets", href: "/fusion-suit-sets" },
+    { name: "Lehengas & Skirt Sets", href: "/lehengas-skirt-sets" },
+    { name: "Unstitched Suit Sets", href: "/unstitched-suit-sets" },
+  ]
+
+  const collections = [
+    { name: "Shop All", href: "/collections/shop-all" },
+    { name: "Autumn Winter", href: "/collections/autumn-winter" },
+    { name: "Casual", href: "/collections/casual" },
+    { name: "Festive", href: "/collections/festive" },
+    { name: "Spring Summer", href: "/collections/spring-summer" },
+    { name: "Wedding", href: "/collections/wedding" },
+    { name: "Workwear", href: "/collections/workwear" },
   ]
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
-      {/* Top Banner */}
-      <div className="bg-bibaGold-500 text-white text-center py-2 text-sm font-medium">
+      {/* Top Sale Banner */}
+      <div className="bg-yellow-500 text-white text-center py-2 text-sm font-medium">
         END OF SEASON SALE - UPTO 50% OFF
       </div>
 
       {/* Main Header */}
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        {/* Logo and Ship To */}
-        <div className="flex items-center space-x-4">
-          <Link href="/" className="flex items-center">
-            <Image src="/placeholder-logo.svg" alt="BIBA Logo" width={80} height={40} className="h-auto" />
-          </Link>
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2">
+          <Image src="/placeholder-logo.png" alt="BIBA Logo" width={80} height={40} className="h-auto" />
+        </Link>
+
+        {/* Ship To & Search (Desktop) */}
+        <div className="hidden lg:flex items-center gap-4 flex-1 max-w-2xl mx-8">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center text-gray-700 text-sm">
-                Ship to <Image src="/placeholder.svg" alt="India Flag" width={20} height={15} className="ml-2 mr-1" />{" "}
-                India (₹)
+              <Button variant="ghost" className="flex items-center gap-1 text-sm">
+                Ship to{" "}
+                <Image
+                  src="/placeholder.svg?height=16&width=16"
+                  alt="India Flag"
+                  width={16}
+                  height={16}
+                  className="rounded-full"
+                />{" "}
+                India (R) <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem>India (₹)</DropdownMenuItem>
-              <DropdownMenuItem>USA ($)</DropdownMenuItem>
-              <DropdownMenuItem>UK (£)</DropdownMenuItem>
+              <DropdownMenuItem>USA</DropdownMenuItem>
+              <DropdownMenuItem>UK</DropdownMenuItem>
+              <DropdownMenuItem>Canada</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-
-        {/* Search Bar (Desktop) */}
-        <div className="hidden lg:flex flex-1 max-w-md mx-8 relative">
-          <Input
-            type="text"
-            placeholder="Search kurta, shirts and dupattas"
-            className="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:border-bibaRed-600 focus:ring-1 focus:ring-bibaRed-600"
-          />
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <div className="relative flex-1">
+            <Input
+              type="search"
+              placeholder="Search kurta, shirts and dupattas"
+              className="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:ring-0 focus:border-gray-400"
+            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+          </div>
         </div>
 
         {/* Icons (Desktop) */}
-        <div className="hidden lg:flex items-center space-x-6">
-          <Button variant="ghost" size="icon" aria-label="Wishlist">
-            <Heart size={24} />
+        <div className="hidden lg:flex items-center gap-4">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/wishlist">
+              <Heart className="h-6 w-6 text-gray-700" />
+            </Link>
           </Button>
-          <Link href="/cart">
-            <Button variant="ghost" size="icon" aria-label="Shopping Bag" className="relative">
-              <ShoppingBag size={24} />
-              {cartTotalQuantity > 0 && (
-                <span className="absolute -top-1 -right-1 bg-bibaRed-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {cartTotalQuantity}
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/cart" className="relative">
+              <ShoppingCart className="h-6 w-6 text-gray-700" />
+              {cartQuantity > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                  {cartQuantity}
                 </span>
               )}
-            </Button>
-          </Link>
-          <Link href={isAuthenticated ? "/dashboard" : "/auth/login"}>
-            <Button variant="ghost" size="icon" aria-label="User Account">
-              <User size={24} />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/auth/login">
+              <User className="h-6 w-6 text-gray-700" />
+            </Link>
+          </Button>
         </div>
 
-        {/* Mobile Menu and Icons */}
-        <div className="flex lg:hidden items-center space-x-4">
-          <Button variant="ghost" size="icon" aria-label="Search">
-            <Search size={24} />
+        {/* Mobile Menu Toggle & Icons */}
+        <div className="flex lg:hidden items-center gap-4">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/wishlist">
+              <Heart className="h-6 w-6 text-gray-700" />
+            </Link>
           </Button>
-          <Link href="/cart">
-            <Button variant="ghost" size="icon" aria-label="Shopping Bag" className="relative">
-              <ShoppingBag size={24} />
-              {cartTotalQuantity > 0 && (
-                <span className="absolute -top-1 -right-1 bg-bibaRed-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {cartTotalQuantity}
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/cart" className="relative">
+              <ShoppingCart className="h-6 w-6 text-gray-700" />
+              {cartQuantity > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                  {cartQuantity}
                 </span>
               )}
-            </Button>
-          </Link>
-          <Sheet>
+            </Link>
+          </Button>
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Open Menu">
-                <Menu size={24} />
+              <Button variant="ghost" size="icon">
+                <Menu className="h-6 w-6 text-gray-700" />
+                <span className="sr-only">Toggle mobile menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-              <div className="flex flex-col p-4">
-                <div className="flex justify-end mb-4">
-                  <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <X size={24} />
-                    </Button>
-                  </SheetTrigger>
-                </div>
-                <Link
-                  href={isAuthenticated ? "/dashboard" : "/auth/login"}
-                  className="flex items-center py-2 text-lg font-medium text-gray-800 hover:text-bibaRed-600"
-                >
-                  <User className="mr-2" size={20} /> {isAuthenticated ? "My Account" : "Login / Register"}
+            <SheetContent side="left" className="w-full max-w-xs p-4">
+              <div className="flex items-center justify-between mb-6">
+                <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Image src="/placeholder-logo.png" alt="BIBA Logo" width={80} height={40} />
                 </Link>
-                <div className="border-t border-gray-200 my-4"></div>
-                <nav className="flex flex-col space-y-2">
-                  {navLinks.map((link) => (
-                    <Link
-                      key={link.name}
-                      href={link.href}
-                      className={`py-2 text-lg font-medium text-gray-800 hover:text-bibaRed-600 ${link.className || ""}`}
-                    >
-                      {link.name}
-                    </Link>
-                  ))}
-                </nav>
+                <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
+                  <X className="h-6 w-6" />
+                  <span className="sr-only">Close menu</span>
+                </Button>
               </div>
+              <div className="mb-4">
+                <Input
+                  type="search"
+                  placeholder="Search..."
+                  className="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300"
+                />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+              </div>
+              <nav className="grid gap-2 text-lg font-medium">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    className={`block py-2 ${link.isSale ? "text-red-600 font-bold" : "text-gray-700 hover:text-gray-900"}`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {link.name}
+                  </Link>
+                ))}
+                <Link
+                  href="/auth/login"
+                  className="block py-2 text-gray-700 hover:text-gray-900"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  My Account
+                </Link>
+              </nav>
             </SheetContent>
           </Sheet>
         </div>
@@ -147,15 +190,48 @@ const Header: React.FC = () => {
 
       {/* Navigation (Desktop) */}
       <nav className="hidden lg:block bg-white border-t border-gray-200">
-        <ul className="container mx-auto px-4 flex justify-center space-x-8 py-3">
+        <ul className="container mx-auto px-4 flex justify-center gap-8">
           {navLinks.map((link) => (
-            <li key={link.name}>
+            <li key={link.name} className="relative group">
               <Link
                 href={link.href}
-                className={`text-gray-800 hover:text-bibaRed-600 font-medium text-sm uppercase ${link.className || ""}`}
+                className={`block py-4 text-sm font-semibold uppercase ${
+                  link.isSale ? "text-red-600" : "text-gray-700 hover:text-gray-900"
+                } border-b-2 border-transparent group-hover:border-primary-500 transition-colors duration-200`}
               >
                 {link.name}
               </Link>
+              {/* Example of a mega menu for 'NEW' and 'DRESSES' */}
+              {(link.name === "NEW" || link.name === "DRESSES") && (
+                <div className="absolute left-0 top-full w-[800px] bg-white shadow-lg pt-4 pb-6 hidden group-hover:block z-10">
+                  <div className="grid grid-cols-2 gap-8 px-6">
+                    <div>
+                      <h3 className="font-bold text-lg mb-3 text-gray-800">CATEGORY</h3>
+                      <ul className="grid gap-2">
+                        {categories.map((cat) => (
+                          <li key={cat.name}>
+                            <Link href={cat.href} className="text-gray-600 hover:text-primary-500 text-sm">
+                              {cat.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg mb-3 text-gray-800">COLLECTION</h3>
+                      <ul className="grid gap-2">
+                        {collections.map((col) => (
+                          <li key={col.name}>
+                            <Link href={col.href} className="text-gray-600 hover:text-primary-500 text-sm">
+                              {col.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
             </li>
           ))}
         </ul>
@@ -163,5 +239,3 @@ const Header: React.FC = () => {
     </header>
   )
 }
-
-export default Header
