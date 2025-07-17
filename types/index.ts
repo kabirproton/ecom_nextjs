@@ -5,75 +5,61 @@ export interface Product {
   price: number
   originalPrice?: number
   discount?: number
-  images: string[]
+  imageUrl: string
   category: string
-  subcategory?: string
-  sizes: string[]
-  colors: string[]
-  inStock: boolean
-  isOnSale?: boolean
-  isFeatured?: boolean
-  rating?: number
-  reviews?: number
-  createdAt: string
-  updatedAt: string
+  rating: number
+  reviews: number
+  isNewArrival?: boolean
+  isOnlineExclusive?: boolean
 }
 
-export interface CartItem {
-  id: string
-  productId: string
-  product: Product
+export interface CartItem extends Product {
   quantity: number
-  size: string
-  color: string
 }
 
 export interface User {
   id: string
   email: string
-  firstName: string
-  lastName: string
-  phone?: string
-  addresses: Address[]
-  createdAt: string
-}
-
-export interface Address {
-  id: string
-  type: "home" | "work" | "other"
-  firstName: string
-  lastName: string
-  address: string
-  city: string
-  state: string
-  pincode: string
-  phone: string
-  isDefault: boolean
+  name?: string
+  isAdmin: boolean
 }
 
 export interface Order {
   id: string
   userId: string
   items: CartItem[]
-  total: number
-  status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled"
-  shippingAddress: Address
-  paymentMethod: string
-  createdAt: string
-  updatedAt: string
+  totalAmount: number
+  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled"
+  orderDate: string
+  shippingAddress: {
+    fullName: string
+    addressLine1: string
+    addressLine2?: string
+    city: string
+    state: string
+    zipCode: string
+    country: string
+  }
 }
 
 export interface Category {
-  id: string
   name: string
   slug: string
   image?: string
-  subcategories?: Subcategory[]
 }
 
-export interface Subcategory {
-  id: string
+export interface Collection {
   name: string
   slug: string
-  categoryId: string
+  image?: string
+}
+
+export interface Banner {
+  id: string
+  imageUrl: string
+  title: string
+  subtitle: string
+  buttonText: string
+  link: string
+  position: "hero" | "promo"
 }

@@ -1,125 +1,101 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Heart, Eye } from "lucide-react"
+import { Heart, Eye, ShoppingBag } from "lucide-react"
+import type { Product } from "@/types"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { useDispatch } from "react-redux"
 import { addToCart } from "@/store/slices/cartSlice"
-import type { Product } from "@/types"
 
 interface ProductCardProps {
   product: Product
 }
 
-const ProductCard = ({ product }: ProductCardProps) => {
-  const [isWishlisted, setIsWishlisted] = useState(false)
+const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const dispatch = useDispatch()
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault()
-    dispatch(
-      addToCart({
-        product,
-        quantity: 1,
-        size: product.sizes[0],
-        color: product.colors[0],
-      }),
-    )
+  const handleAddToCart = () => {
+    dispatch(addToCart(product))
   }
-
-  const handleWishlist = (e: React.MouseEvent) => {
-    e.preventDefault()
-    setIsWishlisted(!isWishlisted)
-  }
-
-  const discountPercentage = product.originalPrice
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-    : 0
 
   return (
-    <div className="group relative bg-white rounded-lg shadow-sm hover:shadow-lg transition-shadow duration-300">
-      <Link href={`/product/${product.id}`}>
-        <div className="relative aspect-[3/4] overflow-hidden rounded-t-lg">
-          {/* Sale Badge */}
-          {product.isOnSale && (
-            <div className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 text-xs font-semibold rounded z-10">
-              Sale
-            </div>
-          )}
-
-          {/* Online Exclusive Badge */}
-          <div className="absolute bottom-2 left-2 bg-black bg-opacity-70 text-white px-2 py-1 text-xs rounded z-10">
-            Online Exclusive
-          </div>
-
-          {/* Product Image */}
+    <Card className="relative group overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+      <Link href={`/products/${product.id}`} className="block">
+        <div className="relative w-full h-64 overflow-hidden">
           <Image
-            src={product.images[0] || "/placeholder.svg"}
+            src={product.imageUrl || "/placeholder.svg"}
             alt={product.name}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            layout="fill"
+            objectFit="cover"
+            className="transition-transform duration-300 group-hover:scale-105"
           />
-
-          {/* Hover Actions */}
-          <div className="absolute top-2 right-2 flex flex-col space-y-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <button
-              onClick={handleWishlist}
-              className={`p-2 rounded-full ${
-                isWishlisted ? "bg-red-600 text-white" : "bg-white text-gray-600"
-              } hover:bg-red-600 hover:text-white transition-colors`}
-            >
-              <Heart size={16} fill={isWishlisted ? "currentColor" : "none"} />
-            </button>
-            <button className="p-2 bg-white text-gray-600 rounded-full hover:bg-gray-100 transition-colors">
-              <Eye size={16} />
-            </button>
-          </div>
-        </div>
-
-        <div className="p-4">
-          {/* Product Name */}
-          <h3 className="text-sm font-medium text-gray-900 mb-2 line-clamp-2">{product.name}</h3>
-
-          {/* Rating */}
-          {product.rating && (
-            <div className="flex items-center mb-2">
-              <div className="flex text-yellow-400">
-                {[...Array(5)].map((_, i) => (
-                  <span key={i} className={i < Math.floor(product.rating!) ? "text-yellow-400" : "text-gray-300"}>
-                    ★
-                  </span>
-                ))}
-              </div>
-              <span className="text-xs text-gray-500 ml-1">({product.reviews})</span>
-            </div>
+          {product.isNewArrival && (
+            <span className="absolute top-2 left-2 bg-bibaRed-600 text-white text-xs font-semibold px-2 py-1 rounded-full">
+              New
+            </span>
           )}
-
-          {/* Price */}
-          <div className="flex items-center space-x-2 mb-3">
-            <span className="text-lg font-bold text-gray-900">₹{product.price.toLocaleString()}</span>
-            {product.originalPrice && (
-              <>
-                <span className="text-sm text-gray-500 line-through">
-                  MRP ₹{product.originalPrice.toLocaleString()}
-                </span>
-                <span className="text-sm text-green-600 font-medium">{discountPercentage}% OFF</span>
-              </>
-            )}
-          </div>
-
-          {/* Add to Cart Button */}
-          <button
-            onClick={handleAddToCart}
-            className="w-full bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 transition-colors text-sm font-medium"
-          >
-            Add to Cart
-          </button>
+          {product.discount && product.discount > 0 && (
+            <span className="absolute top-2 right-2 bg-green-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+              {product.discount}% OFF
+            </span>
+          )}
         </div>
       </Link>
-    </div>
+      <CardContent className="p-4">
+        <h3 className="text-lg font-semibold text-gray-800 line-clamp-2">{product.name}</h3>
+        <div className="flex items-center justify-between mt-2">
+          <div className="flex items-baseline gap-2">
+            <span className="text-xl font-bold text-bibaRed-700">₹{product.price.toLocaleString()}</span>
+            {product.originalPrice && (
+              <span className="text-sm text-gray-500 line-through">₹{product.originalPrice.toLocaleString()}</span>
+            )}
+          </div>
+          {product.discount && product.discount > 0 && (
+            <span className="text-sm font-medium text-green-600">{product.discount}% OFF</span>
+          )}
+        </div>
+        <div className="flex items-center text-sm text-gray-600 mt-2">
+          <span className="flex items-center">
+            {"⭐".repeat(Math.floor(product.rating))}
+            {"☆".repeat(5 - Math.floor(product.rating))}
+          </span>
+          <span className="ml-2">({product.reviews} reviews)</span>
+        </div>
+        <div className="flex gap-2 mt-4">
+          <Button
+            variant="outline"
+            size="icon"
+            className="flex-1 border-bibaRed-600 text-bibaRed-600 hover:bg-bibaRed-50 hover:text-bibaRed-700 bg-transparent"
+            aria-label="Add to Wishlist"
+          >
+            <Heart className="h-5 w-5" />
+          </Button>
+          <Button className="flex-1 bg-bibaRed-600 hover:bg-bibaRed-700 text-white" onClick={handleAddToCart}>
+            <ShoppingBag className="h-5 w-5 mr-2" /> Add to Cart
+          </Button>
+        </div>
+      </CardContent>
+      <div className="absolute inset-0 bg-black/20 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <Link href={`/products/${product.id}`}>
+          <Button variant="secondary" size="icon" className="rounded-full bg-white/80 hover:bg-white">
+            <Eye className="h-5 w-5 text-gray-700" />
+            <span className="sr-only">Quick View</span>
+          </Button>
+        </Link>
+        <Button
+          variant="secondary"
+          size="icon"
+          className="rounded-full bg-white/80 hover:bg-white"
+          aria-label="Add to Wishlist"
+        >
+          <Heart className="h-5 w-5 text-gray-700" />
+          <span className="sr-only">Add to Wishlist</span>
+        </Button>
+      </div>
+    </Card>
   )
 }
 

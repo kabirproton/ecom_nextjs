@@ -1,33 +1,41 @@
-import { configureStore } from "@reduxjs/toolkit"
-import { persistStore, persistReducer } from "redux-persist"
-import storage from "redux-persist/lib/storage"
-import { combineReducers } from "@reduxjs/toolkit"
-import authSlice from "./slices/authSlice"
-import cartSlice from "./slices/cartSlice"
-import productSlice from "./slices/productSlice"
+import { configureStore, combineReducers } from "@reduxjs/toolkit"
+import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist"
+import storage from "redux-persist/lib/storage" // defaults to localStorage for web
+import storageSession from "redux-persist/lib/storage/session" // defaults to sessionStorage for web
+import authReducer from "./slices/authSlice"
+import cartReducer from "./slices/cartSlice"
+import productReducer from "./slices/productSlice"
 
-const persistConfig = {
-  key: "root",
-  storage,
-  whitelist: ["cart", "auth"], // Only persist cart and auth
+// Redux Persist configuration for localStorage (e.g., cart)
+const cartPersistConfig = {
+  key: "cart",
+  storage: storage,
+  whitelist: ["items"], // Only persist the 'items' array from cart slice
+}
+
+// Redux Persist configuration for sessionStorage (e.g., temporary form data)
+const tempFormDataPersistConfig = {
+  key: "tempFormData",
+  storage: storageSession,
+  whitelist: [], // Add slices here if you have temporary form data
 }
 
 const rootReducer = combineReducers({
-  auth: authSlice,
-  cart: cartSlice,
-  products: productSlice,
+  auth: authReducer,
+  cart: persistReducer(cartPersistConfig, cartReducer),
+  products: productReducer,
+  // Add other reducers here
 })
 
-const persistedReducer = persistReducer(persistConfig, rootReducer)
-
 export const store = configureStore({
-  reducer: persistedReducer,
+  reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ["persist/PERSIST", "persist/REHYDRATE"],
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
     }),
+  devTools: process.env.NODE_ENV !== "production",
 })
 
 export const persistor = persistStore(store)

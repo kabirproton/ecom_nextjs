@@ -1,16 +1,12 @@
 import CryptoJS from "crypto-js"
 
-const SECRET_KEY = process.env.NEXT_PUBLIC_ENCRYPTION_KEY || "default-secret-key"
+const ENCRYPTION_KEY = process.env.NEXT_PUBLIC_ENCRYPTION_KEY || "super-secret-key"
 
-export const encrypt = (text: string): string => {
-  return CryptoJS.AES.encrypt(text, SECRET_KEY).toString()
+export const encryptData = (data: string): string => {
+  return CryptoJS.AES.encrypt(data, ENCRYPTION_KEY).toString()
 }
 
-export const decrypt = (ciphertext: string): string => {
-  const bytes = CryptoJS.AES.decrypt(ciphertext, SECRET_KEY)
+export const decryptData = (ciphertext: string): string => {
+  const bytes = CryptoJS.AES.decrypt(ciphertext, ENCRYPTION_KEY)
   return bytes.toString(CryptoJS.enc.Utf8)
-}
-
-export const hashPassword = (password: string): string => {
-  return CryptoJS.SHA256(password).toString()
 }

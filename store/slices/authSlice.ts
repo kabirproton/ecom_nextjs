@@ -1,9 +1,10 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit"
-import { supabase } from "@/lib/supabase"
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 import type { User } from "@/types"
+import { encryptData } from "@/lib/encryption"
 
 interface AuthState {
   user: User | null
+  token: string | null
   isAuthenticated: boolean
   loading: boolean
   error: string | null
@@ -11,100 +12,48 @@ interface AuthState {
 
 const initialState: AuthState = {
   user: null,
+  token: null,
   isAuthenticated: false,
   loading: false,
   error: null,
 }
 
-export const signUp = createAsyncThunk(
-  "auth/signUp",
-  async ({
-    email,
-    password,
-    firstName,
-    lastName,
-  }: {
-    email: string
-    password: string
-    firstName: string
-    lastName: string
-  }) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-        },
-      },
-    })
-
-    if (error) throw error
-    return data.user
-  },
-)
-
-export const signIn = createAsyncThunk(
-  "auth/signIn",
-  async ({ email, password }: { email: string; password: string }) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (error) throw error
-    return data.user
-  },
-)
-
-export const signOut = createAsyncThunk("auth/signOut", async () => {
-  const { error } = await supabase.auth.signOut()
-  if (error) throw error
-})
-
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    setUser: (state, action: PayloadAction<User | null>) => {
-      state.user = action.payload
-      state.isAuthenticated = !!action.payload
-    },
-    clearError: (state) => {
+    loginStart: (state) => {
+      state.loading = true
       state.error = null
     },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(signUp.pending, (state) => {
-        state.loading = true
-        state.error = null
-      })
-      .addCase(signUp.fulfilled, (state) => {
-        state.loading = false
-      })
-      .addCase(signUp.rejected, (state, action) => {
-        state.loading = false
-        state.error = action.error.message || "Sign up failed"
-      })
-      .addCase(signIn.pending, (state) => {
-        state.loading = true
-        state.error = null
-      })
-      .addCase(signIn.fulfilled, (state) => {
-        state.loading = false
-      })
-      .addCase(signIn.rejected, (state, action) => {
-        state.loading = false
-        state.error = action.error.message || "Sign in failed"
-      })
-      .addCase(signOut.fulfilled, (state) => {
-        state.user = null
-        state.isAuthenticated = false
-      })
+    loginSuccess: (state, action: PayloadAction<{ user: User; token: string }>) => {
+      state.loading = false
+      state.user = action.payload.user
+      state.token = encryptData(action.payload.token) // Encrypt token
+      state.isAuthenticated = true
+    },
+    loginFailure: (state, action: PayloadAction<string>) => {
+      state.loading = false
+      state.error = action.payload
+      state.user = null
+      state.token = null
+      state.isAuthenticated = false
+    },
+    logout: (state) => {
+      state.user = null
+      state.token = null // Clear token
+      state.isAuthenticated = false
+      state.error = null
+      state.loading = false
+    },
+    // You might want a separate action to set user from session/cookie if already logged in
+    setUserFromSession: (state, action: PayloadAction<{ user: User; token: string }>) => {
+      state.user = action.payload.user
+      state.token = encryptData(action.payload.token)
+      state.isAuthenticated = true
+    },
   },
 })
 
-export const { setUser, clearError } = authSlice.actions
+export const { loginStart, loginSuccess, loginFailure, logout, setUserFromSession } = authSlice.actions
 export default authSlice.reducer
