@@ -1,12 +1,7 @@
-"use client"
-
-import { useEffect } from "react"
-import { useDispatch, useSelector } from "react-redux"
-import { fetchProductById, clearSelectedProduct } from "@/store/slices/productSlice"
-import type { AppDispatch, RootState } from "@/store"
-import ProductDetails from "@/components/product/ProductDetails"
-import Loading from "@/app/loading" // Re-using the loading skeleton
-import NotFound from "@/app/not-found" // Re-using the not-found page
+import { ProductDetails } from "@/components/product/ProductDetails"
+import { supabase } from "@/lib/supabase"
+import type { Product, Review } from "@/types"
+import { notFound } from "next/navigation"
 
 interface ProductPageProps {
   params: {
@@ -14,31 +9,32 @@ interface ProductPageProps {
   }
 }
 
-export default function ProductPage({ params }: ProductPageProps) {
+export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = params
-  const dispatch = useDispatch<AppDispatch>()
-  const { selectedProduct, loading, error } = useSelector((state: RootState) => state.products)
 
-  useEffect(() => {
-    if (id) {
-      dispatch(fetchProductById(id))
-    }
-    return () => {
-      dispatch(clearSelectedProduct()) // Clear product on unmount
-    }
-  }, [dispatch, id])
+  // Fetch product details
+  const { data: product, error: productError } = await supabase.from("products").select("*").eq("id", id).single()
 
-  if (loading) {
-    return <Loading />
+  if (productError || !product) {
+    console.error("Error fetching product:", productError)
+    notFound() // Show 404 page if product not found
   }
 
-  if (error || !selectedProduct) {
-    return <NotFound />
+  // Fetch reviews for the product
+  const { data: reviews, error: reviewsError } = await supabase
+    .from("reviews")
+    .select("*")
+    .eq("product_id", id)
+    .order("created_at", { ascending: false })
+
+  if (reviewsError) {
+    console.error("Error fetching reviews:", reviewsError)
+    // Continue without reviews if there's an error
   }
 
   return (
-    <div className="py-8">
-      <ProductDetails product={selectedProduct} />
+    <div className="container mx-auto py-8">
+      <ProductDetails product={product as Product} reviews={(reviews as Review[]) || []} />
     </div>
   )
 }

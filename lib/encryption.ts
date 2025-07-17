@@ -1,12 +1,2 @@
-import CryptoJS from "crypto-js"
-
-const ENCRYPTION_KEY = process.env.NEXT_PUBLIC_ENCRYPTION_KEY || "your-super-secret-key"
-
-export const encryptData = (data: string): string => {
-  return CryptoJS.AES.encrypt(data, ENCRYPTION_KEY).toString()
-}
-
-export const decryptData = (ciphertext: string): string => {
-  const bytes = CryptoJS.AES.decrypt(ciphertext, ENCRYPTION_KEY)
-  return bytes.toString(CryptoJS.enc.Utf8)
-}
+// This file is now empty as client-side encryption has been removed.
+// RLS is used for security instead.

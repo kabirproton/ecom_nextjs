@@ -27,12 +27,6 @@ module.exports = {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
-          // Custom BIBA colors
-          800: "hsl(var(--primary-800))",
-          700: "hsl(var(--primary-700))",
-          600: "hsl(var(--primary-600))",
-          500: "hsl(var(--primary-500))",
-          100: "hsl(var(--primary-100))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",

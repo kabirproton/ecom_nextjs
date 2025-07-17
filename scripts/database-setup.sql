@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS products (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create users table (Supabase Auth handles basic user data, this is for extended profile)
+-- Create profiles table (Supabase Auth handles basic user data, this is for extended profile)
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT,
@@ -57,11 +57,41 @@ CREATE TABLE IF NOT EXISTS reviews (
   UNIQUE (product_id, user_id) -- Ensure one review per user per product
 );
 
+-- Create categories table
+CREATE TABLE IF NOT EXISTS categories (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT UNIQUE NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  image TEXT
+);
+
+-- Create collections table
+CREATE TABLE IF NOT EXISTS collections (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT UNIQUE NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  image TEXT
+);
+
+-- Create banners table
+CREATE TABLE IF NOT EXISTS banners (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  image_url TEXT NOT NULL,
+  title TEXT NOT NULL,
+  subtitle TEXT,
+  button_text TEXT,
+  link TEXT NOT NULL,
+  position TEXT NOT NULL -- 'hero' or 'promo'
+);
+
 -- Enable Row Level Security (RLS) for tables
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE collections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE banners ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for products (read-only for public, full for authenticated)
 CREATE POLICY "Allow public read access to products" ON products FOR SELECT USING (TRUE);
@@ -87,6 +117,21 @@ CREATE POLICY "Allow public read access to reviews" ON reviews FOR SELECT USING 
 CREATE POLICY "Allow authenticated insert on reviews" ON reviews FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Allow individual update on reviews" ON reviews FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Allow individual delete on reviews" ON reviews FOR DELETE USING (auth.uid() = user_id);
+
+-- RLS Policies for categories and collections
+CREATE POLICY "Allow public read access to categories" ON categories FOR SELECT USING (TRUE);
+CREATE POLICY "Allow public read access to collections" ON collections FOR SELECT USING (TRUE);
+-- Admin policies for categories and collections
+CREATE POLICY "Allow admin full access to categories" ON categories
+  FOR ALL USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = TRUE));
+CREATE POLICY "Allow admin full access to collections" ON collections
+  FOR ALL USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = TRUE));
+
+-- RLS Policies for banners
+CREATE POLICY "Allow public read access to banners" ON banners FOR SELECT USING (TRUE);
+-- Admin policy for banners
+CREATE POLICY "Allow admin full access to banners" ON banners
+  FOR ALL USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = TRUE));
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()

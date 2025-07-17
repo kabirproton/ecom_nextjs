@@ -2,7 +2,13 @@ import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/tool
 import { supabase } from "@/lib/supabase"
 import type { Product, ProductState } from "@/types"
 
-// Async Thunks
+const initialState: ProductState = {
+  products: [],
+  featuredProducts: [],
+  loading: false,
+  error: null,
+}
+
 export const fetchProducts = createAsyncThunk("products/fetchProducts", async (_, { rejectWithValue }) => {
   try {
     const { data, error } = await supabase.from("products").select("*")
@@ -19,7 +25,7 @@ export const fetchFeaturedProducts = createAsyncThunk(
   "products/fetchFeaturedProducts",
   async (_, { rejectWithValue }) => {
     try {
-      const { data, error } = await supabase.from("products").select("*").eq("isFeatured", true)
+      const { data, error } = await supabase.from("products").select("*").eq("is_featured", true).limit(8) // Fetch up to 8 featured products
       if (error) {
         return rejectWithValue(error.message)
       }
@@ -45,28 +51,12 @@ export const fetchProductById = createAsyncThunk(
   },
 )
 
-const initialState: ProductState = {
-  products: [],
-  featuredProducts: [],
-  loading: false,
-  error: null,
-  selectedProduct: null,
-}
-
 const productSlice = createSlice({
   name: "products",
   initialState,
-  reducers: {
-    clearProductError: (state) => {
-      state.error = null
-    },
-    clearSelectedProduct: (state) => {
-      state.selectedProduct = null
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
-      // Fetch Products
       .addCase(fetchProducts.pending, (state) => {
         state.loading = true
         state.error = null
@@ -79,7 +69,6 @@ const productSlice = createSlice({
         state.loading = false
         state.error = action.payload as string
       })
-      // Fetch Featured Products
       .addCase(fetchFeaturedProducts.pending, (state) => {
         state.loading = true
         state.error = null
@@ -92,23 +81,19 @@ const productSlice = createSlice({
         state.loading = false
         state.error = action.payload as string
       })
-      // Fetch Product By Id
       .addCase(fetchProductById.pending, (state) => {
         state.loading = true
         state.error = null
-        state.selectedProduct = null
       })
-      .addCase(fetchProductById.fulfilled, (state, action: PayloadAction<Product>) => {
+      .addCase(fetchProductById.fulfilled, (state) => {
         state.loading = false
-        state.selectedProduct = action.payload
+        // No direct state update for single product, it's fetched for a specific page
       })
       .addCase(fetchProductById.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
-        state.selectedProduct = null
       })
   },
 })
 
-export const { clearProductError, clearSelectedProduct } = productSlice.actions
 export default productSlice.reducer

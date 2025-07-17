@@ -3,54 +3,34 @@ export interface Product {
   name: string
   description: string
   price: number
-  discountPrice?: number
+  discount_price?: number
   images: string[]
   category: string
   rating: number
-  numReviews: number
+  num_reviews: number
   stock: number
   sku: string
-  brand: string
-  material: string
-  color: string
-  size: string[]
-  careInstructions: string
-  isFeatured: boolean
-  createdAt: string
-  updatedAt: string
+  brand?: string
+  material?: string
+  color?: string
+  size?: string[]
+  care_instructions?: string
+  is_featured?: boolean
+  created_at: string
+  updated_at: string
 }
 
 export interface CartItem extends Product {
   quantity: number
+  selectedSize?: string
+  selectedColor?: string
 }
 
 export interface User {
   id: string
   email: string
   name?: string
-  address?: string
-  phone?: string
   isAdmin: boolean
-}
-
-export interface Order {
-  id: string
-  userId: string
-  items: CartItem[]
-  totalAmount: number
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled"
-  orderDate: string
-  shippingAddress: string
-  paymentMethod: string
-}
-
-export interface Review {
-  id: string
-  productId: string
-  userId: string
-  rating: number
-  comment: string
-  createdAt: string
 }
 
 export interface AuthState {
@@ -71,5 +51,37 @@ export interface ProductState {
   featuredProducts: Product[]
   loading: boolean
   error: string | null
-  selectedProduct: Product | null
+}
+
+export interface Banner {
+  id: string
+  image_url: string
+  title: string
+  subtitle?: string
+  button_text?: string
+  link: string
+  position: "hero" | "promo"
+}
+
+export interface Category {
+  id: string
+  name: string
+  slug: string
+  image?: string
+}
+
+export interface Collection {
+  id: string
+  name: string
+  slug: string
+  image?: string
+}
+
+export interface Review {
+  id: string
+  product_id: string
+  user_id: string
+  rating: number
+  comment?: string
+  created_at: string
 }

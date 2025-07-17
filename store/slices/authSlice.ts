@@ -1,22 +1,18 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit"
 import { supabase } from "@/lib/supabase"
 import type { User, AuthState } from "@/types"
-import { encryptData, decryptData } from "@/lib/encryption"
 
 // Async Thunks
 export const signupUser = createAsyncThunk(
   "auth/signupUser",
   async ({ email, password, name }: { email: string; password: string; name: string }, { rejectWithValue }) => {
     try {
-      // Encrypt sensitive data before sending (example for name/other profile data)
-      const encryptedName = encryptData(name)
-
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            name: encryptedName, // Store encrypted name
+            name: name,
             is_admin: false, // Default to non-admin
           },
         },
@@ -27,12 +23,10 @@ export const signupUser = createAsyncThunk(
       }
 
       if (data.user) {
-        // Decrypt name for local state
-        const decryptedName = data.user.user_metadata?.name ? decryptData(data.user.user_metadata.name) : undefined
         const user: User = {
           id: data.user.id,
           email: data.user.email!,
-          name: decryptedName,
+          name: data.user.user_metadata?.name,
           isAdmin: data.user.user_metadata?.is_admin || false,
         }
         return user
@@ -58,11 +52,10 @@ export const loginUser = createAsyncThunk(
       }
 
       if (data.user) {
-        const decryptedName = data.user.user_metadata?.name ? decryptData(data.user.user_metadata.name) : undefined
         const user: User = {
           id: data.user.id,
           email: data.user.email!,
-          name: decryptedName,
+          name: data.user.user_metadata?.name,
           isAdmin: data.user.user_metadata?.is_admin || false,
         }
         return user
@@ -98,11 +91,10 @@ export const checkUserSession = createAsyncThunk("auth/checkUserSession", async 
     }
 
     if (session?.user) {
-      const decryptedName = session.user.user_metadata?.name ? decryptData(session.user.user_metadata.name) : undefined
       const user: User = {
         id: session.user.id,
         email: session.user.email!,
-        name: decryptedName,
+        name: session.user.user_metadata?.name,
         isAdmin: session.user.user_metadata?.is_admin || false,
       }
       return user
