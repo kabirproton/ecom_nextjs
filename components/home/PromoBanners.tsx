@@ -1,36 +1,50 @@
 import Image from "next/image"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
 export function PromoBanners() {
   return (
     <section className="py-16">
-      <div className="container mx-auto px-4">
+      <div className="container">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* First Banner */}
           <Card className="overflow-hidden">
             <CardContent className="p-0">
-              <div className="relative h-64 md:h-80">
-                <Image src="/images/promo-banner-1.png" alt="Summer Collection" fill className="object-cover" />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                  <div className="text-center text-white space-y-4">
-                    <h3 className="text-2xl md:text-3xl font-bold">Summer Collection</h3>
-                    <p className="text-lg">Light & Breezy Outfits</p>
-                    <Button variant="secondary">Shop Collection</Button>
+              <div className="relative aspect-[4/3]">
+                <Image
+                  src="/placeholder.svg?height=400&width=600"
+                  alt="Summer Collection"
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+                <div className="absolute inset-0 flex items-center">
+                  <div className="p-8 text-white">
+                    <h3 className="text-2xl font-bold mb-2">Summer Collection</h3>
+                    <p className="mb-4">Light and breezy outfits for the season</p>
+                    <Button variant="secondary" asChild>
+                      <Link href="/collections/summer">Shop Now</Link>
+                    </Button>
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
+          {/* Second Banner */}
           <Card className="overflow-hidden">
             <CardContent className="p-0">
-              <div className="relative h-64 md:h-80">
-                <Image src="/images/promo-banner-2.png" alt="Festive Wear" fill className="object-cover" />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                  <div className="text-center text-white space-y-4">
-                    <h3 className="text-2xl md:text-3xl font-bold">Festive Wear</h3>
-                    <p className="text-lg">Celebrate in Style</p>
-                    <Button variant="secondary">Explore Now</Button>
+              <div className="relative aspect-[4/3]">
+                <Image src="/placeholder.svg?height=400&width=600" alt="Festive Wear" fill className="object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+                <div className="absolute inset-0 flex items-center">
+                  <div className="p-8 text-white">
+                    <h3 className="text-2xl font-bold mb-2">Festive Wear</h3>
+                    <p className="mb-4">Elegant outfits for special occasions</p>
+                    <Button variant="secondary" asChild>
+                      <Link href="/collections/festive">Explore</Link>
+                    </Button>
                   </div>
                 </div>
               </div>

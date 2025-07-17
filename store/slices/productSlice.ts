@@ -5,7 +5,6 @@ import type { Product } from "@/types"
 interface ProductState {
   products: Product[]
   featuredProducts: Product[]
-  currentProduct: Product | null
   loading: boolean
   error: string | null
 }
@@ -13,7 +12,6 @@ interface ProductState {
 const initialState: ProductState = {
   products: [],
   featuredProducts: [],
-  currentProduct: null,
   loading: false,
   error: null,
 }
@@ -32,20 +30,10 @@ export const fetchFeaturedProducts = createAsyncThunk("products/fetchFeaturedPro
   return data
 })
 
-export const fetchProductById = createAsyncThunk("products/fetchProductById", async (productId: string) => {
-  const { data, error } = await supabase.from("products").select("*").eq("id", productId).single()
-
-  if (error) throw error
-  return data
-})
-
 const productSlice = createSlice({
   name: "products",
   initialState,
   reducers: {
-    clearCurrentProduct: (state) => {
-      state.currentProduct = null
-    },
     clearError: (state) => {
       state.error = null
     },
@@ -67,20 +55,8 @@ const productSlice = createSlice({
       .addCase(fetchFeaturedProducts.fulfilled, (state, action) => {
         state.featuredProducts = action.payload
       })
-      .addCase(fetchProductById.pending, (state) => {
-        state.loading = true
-        state.error = null
-      })
-      .addCase(fetchProductById.fulfilled, (state, action) => {
-        state.loading = false
-        state.currentProduct = action.payload
-      })
-      .addCase(fetchProductById.rejected, (state, action) => {
-        state.loading = false
-        state.error = action.error.message || "Failed to fetch product"
-      })
   },
 })
 
-export const { clearCurrentProduct, clearError } = productSlice.actions
+export const { clearError } = productSlice.actions
 export default productSlice.reducer

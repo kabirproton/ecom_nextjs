@@ -63,18 +63,24 @@ ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cart_items ENABLE ROW LEVEL SECURITY;
 
--- Create policies for products (public read access)
+-- Create policies for products (public read, admin write)
 CREATE POLICY "Products are viewable by everyone" ON products FOR SELECT USING (true);
+CREATE POLICY "Products are insertable by authenticated users" ON products FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Products are updatable by authenticated users" ON products FOR UPDATE USING (auth.role() = 'authenticated');
+CREATE POLICY "Products are deletable by authenticated users" ON products FOR DELETE USING (auth.role() = 'authenticated');
 
--- Create policies for categories (public read access)
+-- Create policies for categories (public read, admin write)
 CREATE POLICY "Categories are viewable by everyone" ON categories FOR SELECT USING (true);
+CREATE POLICY "Categories are insertable by authenticated users" ON categories FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Categories are updatable by authenticated users" ON categories FOR UPDATE USING (auth.role() = 'authenticated');
+CREATE POLICY "Categories are deletable by authenticated users" ON categories FOR DELETE USING (auth.role() = 'authenticated');
 
--- Create policies for orders (users can only see their own orders)
+-- Create policies for orders (user can only see their own)
 CREATE POLICY "Users can view their own orders" ON orders FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert their own orders" ON orders FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update their own orders" ON orders FOR UPDATE USING (auth.uid() = user_id);
 
--- Create policies for order_items (users can only see items from their orders)
+-- Create policies for order_items (user can only see items from their orders)
 CREATE POLICY "Users can view their own order items" ON order_items FOR SELECT USING (
     EXISTS (SELECT 1 FROM orders WHERE orders.id = order_items.order_id AND orders.user_id = auth.uid())
 );
@@ -82,20 +88,13 @@ CREATE POLICY "Users can insert their own order items" ON order_items FOR INSERT
     EXISTS (SELECT 1 FROM orders WHERE orders.id = order_items.order_id AND orders.user_id = auth.uid())
 );
 
--- Create policies for cart_items (users can only manage their own cart)
+-- Create policies for cart_items (user can only see their own cart)
 CREATE POLICY "Users can view their own cart items" ON cart_items FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert their own cart items" ON cart_items FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update their own cart items" ON cart_items FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Users can delete their own cart items" ON cart_items FOR DELETE USING (auth.uid() = user_id);
 
--- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
-CREATE INDEX IF NOT EXISTS idx_products_featured ON products(is_featured);
-CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
-CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
-CREATE INDEX IF NOT EXISTS idx_cart_items_user_id ON cart_items(user_id);
-
--- Create updated_at trigger function
+-- Create function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN

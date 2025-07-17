@@ -5,7 +5,6 @@ import "./globals.css"
 import { Header } from "@/components/layout/Header"
 import { Footer } from "@/components/layout/Footer"
 import { ReduxProvider } from "@/components/providers/ReduxProvider"
-import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -29,7 +28,6 @@ export default function RootLayout({
             <main className="flex-grow">{children}</main>
             <Footer />
           </div>
-          <Toaster />
         </ReduxProvider>
       </body>
     </html>

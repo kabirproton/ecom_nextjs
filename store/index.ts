@@ -12,7 +12,7 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActionsPaths: ["meta.arg", "payload.timestamp"],
+        ignoredActions: ["persist/PERSIST", "persist/REHYDRATE"],
       },
     }),
 })

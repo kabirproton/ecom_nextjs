@@ -1,7 +1,7 @@
 export interface User {
   id: string
   email: string
-  full_name?: string
+  name?: string
   avatar_url?: string
   created_at: string
   updated_at: string
@@ -34,7 +34,7 @@ export interface Order {
   status: "pending" | "processing" | "shipped" | "delivered" | "cancelled"
   created_at: string
   updated_at: string
-  order_items: OrderItem[]
+  items: OrderItem[]
 }
 
 export interface OrderItem {

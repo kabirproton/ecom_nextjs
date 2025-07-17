@@ -11,7 +11,7 @@ import { Newsletter } from "@/components/home/Newsletter"
 import type { Collection } from "@/types"
 import { supabase } from "@/lib/supabase"
 
-const HomePage = () => {
+export default function HomePage() {
   const dispatch: AppDispatch = useDispatch()
   const { products, loading, error } = useSelector((state: RootState) => state.products)
 
@@ -77,11 +77,9 @@ const HomePage = () => {
     <div className="flex flex-col min-h-screen">
       <HeroCarousel />
       <CategorySection />
-      <FeaturedProducts products={products} />
+      <FeaturedProducts />
       <PromoBanners />
       <Newsletter />
     </div>
   )
 }
-
-export default HomePage
